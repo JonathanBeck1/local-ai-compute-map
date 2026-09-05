@@ -1,31 +1,26 @@
 # Build log
 
-An actual build of a small heterogeneous AI lab, one entry per phase, written as it happens.
+The same setup on real hardware, written as it happens.
 
-Most setup guides are written after the fact by someone who already knows the answer, on hardware
-supplied by a vendor, with the failures edited out. This is the opposite: the hardware is modest and
-already owned, the order was decided in advance, and the things that broke stay in.
+Most setup guides are written afterwards, by someone who already knows the answer, on hardware a
+vendor sent them, with the failures cut. This is the opposite. The hardware is what I already own, the
+order was fixed in advance, and what breaks stays in.
 
-## The hardware
+## Hardware
 
-Deliberately unimpressive, because that is the point — this is the fleet a person actually has rather
-than the one a benchmark article assumes.
-
-| Role | Machine | Relevant spec |
+| Role | Machine | Spec that matters |
 |---|---|---|
-| Development console | MacBook Pro, M3 Pro | 18 GB unified |
-| Always-on services | Mac mini, M4 | 16 GB unified |
+| Development console | MacBook Pro M3 Pro | 18 GB unified |
+| Always-on | Mac mini M4 | 16 GB unified |
 | Local model endpoint | Linux workstation | RTX 4070, 12 GB VRAM, 64 GB RAM |
-| Archive and backup | NAS | — |
-| Elastic capacity | Rented cloud GPUs | as needed, bounded |
+| Archive | NAS | — |
+| Burst | Rented cloud GPUs | bounded |
 
-Two consequences worth stating up front, since they shape everything below. First, 12 GB of VRAM is
-the real ceiling for local work here; anything larger is a cloud job or does not happen. Second, both
-Macs are below the 24 GB that Perplexity's Mac product requires, so some of the tools in the
-[map](../README.md) are documented here but not runnable on this fleet. Where that happens, it is
-noted rather than hidden.
+Two things follow from that. 12 GB is the real ceiling here, so anything bigger is a cloud job or
+doesn't happen. And both Macs are under the 24 GB that Perplexity's Mac product needs, so some tools
+in the [map](../README.md) get documented but not run. Where that happens I say so.
 
-## The phases
+## Phases
 
 | # | Phase | Status |
 |---|---|---|
@@ -34,28 +29,30 @@ noted rather than hidden.
 | 02 | [Linux box, driver, containers](02-linux-box-driver-containers.md) | not started |
 | 03 | [Local model endpoint](03-local-model-endpoint.md) | not started |
 | 04 | [MacBook remote workflow](04-macbook-remote-workflow.md) | not started |
-| 05 | [Always-on services and archive discipline](05-always-on-services.md) | not started |
+| 05 | [Always-on services and archive](05-always-on-services.md) | not started |
 | 06a | [Cloud burst, bounded](06a-cloud-burst-bounded.md) | not started |
 | 06b | [Spend gate](06b-spend-gate.md) | not started |
 
-Phases run in order. Phase 00 is backups and inventory and comes first because a lab built on top of
-unbacked-up work is not a lab, it is an accident with a schedule.
+In order. Phase 00 is backups and inventory, first, because a lab on top of unbacked-up work isn't a
+lab.
 
-## Rules for these entries
+## Rules
 
-1. **Paste real output.** Not a description of the output, and not a cleaned-up version of it.
-2. **Record what broke.** An entry with an empty "what broke" section is suspicious, not impressive.
-3. **Record the cost and the clock.** Both the money and the hours, including the hours lost.
-4. **Sanitize, do not fictionalize.** Hostnames, IP addresses, mesh network names, serial numbers,
-   and account identifiers are replaced with placeholders like `<linux-box>`. Nothing else is edited.
-5. **Do not claim it works until it has been run.** A phase is "done" when its acceptance check has
-   produced pasted output, not when the commands have been typed.
-6. **Note the date.** Every entry is stamped, because the tools in this space change weekly and an
-   undated setup guide is a trap.
+Paste real output, not a description of it and not a cleaned-up version.
+
+Record what broke. An empty "what broke" section reads as suspicious, not impressive.
+
+Record the money and the hours, including hours lost.
+
+Sanitize, don't fictionalize. Hostnames, IPs, mesh names and serials become placeholders like
+`<linux-box>`. Nothing else gets edited.
+
+A phase is done when its acceptance check has produced pasted output. Not when the commands were
+typed.
+
+Date everything. These tools change weekly and an undated setup guide is a trap.
 
 ## Template
-
-Each phase file follows the same shape:
 
 ```markdown
 # Phase NN — <name>

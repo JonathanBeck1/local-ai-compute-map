@@ -1,35 +1,50 @@
-# How to check everything here yourself
+# Checking this yourself
 
-Every claim in this repo carries a `verified` date. This page tells you how to re-check each class of
-claim, so that nothing here has to be taken on trust and so that you can tell how stale a row is
-before you act on it.
+Everything here has a date on it. This page says how to re-check each kind of claim, and how the
+claims were gathered in the first place.
 
-## The staleness policy
+## Method
 
-**Facts in this category decay in weeks.** Between 2026-08-31 and 2026-09-05, while this research was
-being done: NVIDIA published a cross-vendor router that includes Macs, Perplexity shipped hybrid
-local/cloud execution on Apple silicon, and a fleet tool I had listed as spanning macOS turned out to
-have dropped macOS workers nine months earlier. Three of the six entries in
-[CORRECTIONS.md](CORRECTIONS.md) are things that changed or were discovered inside one week.
+This repo was written with heavy use of an AI coding agent. That is worth stating plainly, because
+the whole pitch is "check the primary source," and you should know how these particular claims got
+here before deciding what they're worth.
 
-Rules I hold myself to, and that you should hold this repo to:
+How it worked. Research agents gathered claims with URLs attached. Then the load-bearing ones were
+re-opened by hand against the primary source, one at a time. That second step is not optional and it
+is not a formality: of the first four claims checked that way, three matched verbatim and one was
+wrong in three separate ways. The wrong one had a real URL attached the whole time. A citation is not
+a check.
 
-1. Every factual row states the date it was last checked.
-2. A row more than 90 days old should be treated as unverified, not as true.
-3. Star counts and funding figures are the least useful and most volatile numbers here. They are
-   included only where adoption is the actual claim being made.
-4. A "does not do" claim is only worth stating if it comes from the project's own documentation.
-   Absence of a feature in a blog post is not evidence of its absence in the product.
+Rows are therefore in one of two states, and the difference matters:
 
-## Star counts, creation dates, licenses
+- **Hand-checked.** Someone opened the source and read the sentence. Quoted limitations in the tables
+  are all of this kind.
+- **Agent-gathered.** A URL is attached and the claim is probably right, but nobody has opened it.
 
-The GitHub API needs no authentication for public repositories.
+If you are about to spend money or a weekend on the strength of a row here, open its link. That is
+true of any survey; it is just usually not admitted.
+
+## Staleness
+
+Facts in this category rot in weeks. Between 2026-08-31 and 2026-09-05, while this was being put
+together: NVIDIA shipped a cross-vendor router that includes Macs, Perplexity shipped hybrid
+local/cloud on Apple silicon, and a tool listed here as spanning macOS turned out to have dropped
+macOS nine months earlier. Three of the seven entries in [CORRECTIONS.md](CORRECTIONS.md) are things
+that moved or surfaced inside one week.
+
+So: every row carries a check date, a row older than 90 days should be treated as unverified rather
+than true, and star counts are the least useful number on the page.
+
+## Stars, dates, licenses
+
+No auth needed for public repos.
 
 ```bash
-curl -s https://api.github.com/repos/OWNER/REPO | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['full_name'], d['stargazers_count'], d['created_at'][:10], d['pushed_at'][:10], d['open_issues_count'])"
+curl -s https://api.github.com/repos/OWNER/REPO \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['full_name'], d['stargazers_count'], d['created_at'][:10], d['pushed_at'][:10], d['open_issues_count'])"
 ```
 
-To re-check every repo in the map at once:
+Everything in the map at once:
 
 ```bash
 for r in AlexsJones/llmfit skypilot-org/skypilot exo-explore/exo ollama/ollama \
@@ -40,39 +55,29 @@ for r in AlexsJones/llmfit skypilot-org/skypilot exo-explore/exo ollama/ollama \
 done
 ```
 
-## Whether a feature actually shipped
+## Did a feature actually ship
 
-Do not trust a blog post, a roadmap, or a comparison article. Check, in this order:
+Not from a blog post, a roadmap, or a comparison article. In order: release notes for a version and a
+date, then the reference docs for the exact option name, then the merge commit if it's contested.
 
-1. **The release notes**, for a version number and a date.
-   `https://github.com/OWNER/REPO/releases`
-2. **The reference documentation**, for the exact option name and its semantics.
-3. **The merge commit**, if the feature is contested.
-   `https://api.github.com/search/issues?q=repo:OWNER/REPO+TERM+in:title`
-
-Worked example, for the claim that SkyPilot can cap hourly spend: the option is
-`resources.max_hourly_cost`, it appears in the YAML spec reference, and it shipped in v0.13.0.
+For "SkyPilot can cap hourly spend": the option is `resources.max_hourly_cost`, it's in the YAML spec,
+it shipped in v0.13.0.
 
 - https://github.com/skypilot-org/skypilot/releases/tag/v0.13.0
 - https://docs.skypilot.ai/en/latest/reference/yaml-spec.html
 
-## Whether a limitation is real
+## Is a limitation real
 
-Quote the project's own words. Worked example, for NVIDIA PAIR's scheduler, from its README:
+Quote the project's own words or don't claim it. A feature missing from a blog post is not evidence
+it's missing from the product. PAIR's README, for example:
 
 > "PAIR routes each independent request to one node. It does not pool GPU memory, combine GPUs into a
 > larger logical GPU, shard one model across machines, or split an in-flight inference request
 > between nodes."
 
-> "It does not consider GPU model, available memory, model warmness, or how expensive a request
-> looks."
+## Is anyone actually asking for it
 
-- https://github.com/NVIDIA/Personal-AI-Router
-
-## Whether anybody is actually asking for something
-
-Reaction counts on issues are a better demand signal than article headlines. Sort by reactions, not
-by recency:
+Reactions on issues beat headlines. Sort by reactions, not recency:
 
 ```bash
 curl -s "https://api.github.com/search/issues?q=repo:OWNER/REPO+is:issue+TERM+in:title&sort=reactions&order=desc" \
@@ -83,26 +88,21 @@ for i in json.load(sys.stdin)['items'][:10]:
 "
 ```
 
-A feature request sitting at single-digit reactions after six months is not latent demand. This is
-the check that most 'obvious gap in the market' claims fail, including several of mine.
+A request sitting at single digits after six months is not latent demand. Most "obvious gap in the
+market" claims die here.
 
-## Hardware numbers
+## Hardware and prices
 
-Use the vendor's own specification page for memory bandwidth, capacity, and price, and note that
-prices change without announcement: the DGX Spark moved from $3,999 to $4,699 on 2026-02-23.
+Vendor spec pages only, and note that prices move without announcement — the DGX Spark went from
+$3,999 to $4,699 on 2026-02-23. For speed, prefer a measured tok/s on the exact model and quant you
+care about over any vendor number or calculator.
 
-For local decode speed, bandwidth is the number that matters more than raw FLOPS. Prefer a measured
-tokens-per-second figure on the specific model and quantization you care about over any vendor claim
-or any calculator.
+## Funding and pricing
 
-## Pricing and funding
+Primary sources. Aggregators get the wrong company surprisingly often —
+[CORRECTIONS.md](CORRECTIONS.md) entry 5 is a widely-cited funding figure that belongs to an unrelated
+business with a similar name.
 
-Primary sources only: the vendor's own pricing page, the company's own announcement, or the press
-release. Secondary aggregators are frequently wrong about which company they are describing — see
-[CORRECTIONS.md](CORRECTIONS.md) entry 4 for a case where a widely-cited funding figure belonged to an
-unrelated company with a similar name.
+## Found an error
 
-## If you find an error
-
-Open an issue with the claim, the primary source that contradicts it, and your check date. See the
-end of [CORRECTIONS.md](CORRECTIONS.md).
+Open an issue: the claim, the primary source that contradicts it, your check date.

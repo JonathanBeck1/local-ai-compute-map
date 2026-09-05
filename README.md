@@ -1,166 +1,135 @@
-# Local AI compute, September 2026: what's actually alive
+# Local AI compute, September 2026
 
-A dated, primary-sourced map of the tools people use to run and orchestrate AI on hardware they own —
-Apple silicon, consumer NVIDIA, small home fleets, and rented GPUs — with a column most guides leave
-out: **what each tool does not do.**
+What the tools for running AI on your own hardware actually do, and what they don't. Every row has a
+date. [VERIFY.md](VERIFY.md) shows how to re-check any of it. [CORRECTIONS.md](CORRECTIONS.md) lists
+seven claims about this space that are wrong, including four I had wrong myself.
 
-Every row carries the date I last checked it. Nothing here is taken from a comparison article. See
-[VERIFY.md](VERIFY.md) for how to re-check any of it yourself, and [CORRECTIONS.md](CORRECTIONS.md)
-for six widely-repeated claims in this space that are false — three of which were my own errors
-before they were anyone else's.
+Star counts and licenses checked 2026-09-05. Feature claims checked 2026-09-03 to 2026-09-05.
 
-**Star counts and licenses verified 2026-09-05. Feature and limitation claims verified 2026-09-03 to
-2026-09-05.**
+Written with heavy use of an AI coding agent. Method and its limits: [VERIFY.md](VERIFY.md#method).
 
----
+## Why this exists
 
-## What this is, and what it is not
+I spent about ten days working out whether there was a product to build in personal AI compute
+orchestration. There isn't. Every layer already has a free first-party occupant.
 
-This **is** a survey and a build log. It came out of about ten days of adversarial research into
-whether there was a product to build in this space. The conclusion was no, and the write-up of why is
-not public. What is public is the part that turned out to be worth more than the product idea: an
-inventory of what actually exists, checked against primary sources, on a specific date.
+Runtimes: Ollama, LM Studio, llama.cpp, MLX. Cloud: SkyPilot. Fit estimation: llmfit. Cross-machine
+routing was the last open gap, and NVIDIA closed it on 2026-09-03 with PAIR, which routes to Macs.
 
-This is **not** a tool. There is no package to install, no CLI, no daemon, no config schema for your
-fleet. If you want a control plane for heterogeneous personal compute, the honest answer as of today
-is that the free first-party options below cover most of it and the remaining gap is not worth a
-weekend. That conclusion is the single most useful thing in this repo.
+The survey I did on the way turned out to be worth more than the product idea, mostly because the
+guides I was reading were stale. So this is the survey.
 
----
-
-## The shape of the landscape in one paragraph
-
-Every layer of the personal AI compute stack now has a free, first-party occupant, and most of them
-arrived in the last twelve months. Runtimes are free and excellent (Ollama, LM Studio, llama.cpp,
-MLX). Fleet routing across machines you own went from a hobbyist gap to a vendor feature in one week:
-NVIDIA published PAIR on 2026-09-03, routing across RTX, DGX Spark, **and Apple silicon** on your LAN,
-and LM Studio's LM Link, with Tailscale, already let one machine use models loaded on another. Cloud orchestration
-is owned by SkyPilot, which now has $20M and a pre-launch cost optimizer. Fit estimation is owned by
-llmfit. Approval gates for agent actions are a feature of the coding agents themselves. The
-interesting remaining questions in this space are not "what should someone build" — they are "how
-fast is this actually on my hardware" and "what is my agent authorized to spend," and both are
-measurement problems, not software problems.
-
----
+There is no tool here. No install, no CLI, no config. If you came looking for a control plane for a
+mixed Mac and NVIDIA setup, the answer is that the free options below cover it.
 
 ## Local runtimes
 
-Where the model actually executes. All free, all good, differences are ergonomic.
+Where the model runs. All free, differences are ergonomic.
 
-| Tool | What it does | What it does **not** do | Stars | Checked |
+| Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
-| [Ollama](https://github.com/ollama/ollama) | Local model runner, one-command pulls, OpenAI-compatible and Anthropic `/v1/messages` endpoints (v0.14.0, 2026-01-10). Acts as a third-party gateway provider for Claude Desktop (v0.33.0, 2026-08-21). MIT. | Not a fleet manager. Does not schedule across machines, estimate job cost, or gate spend. Cloud tier moved to per-token pricing 2026-08-31 with credits and no hard cap. | 180,225 | 2026-09-05 |
-| [LM Studio](https://lmstudio.ai/) | GUI runtime, MLX and GGUF, plus **[LM Link](https://lmstudio.ai/link)** — connects devices you own over an end-to-end encrypted Tailscale mesh so one machine can load and use models running on another; remote models appear at the standard `localhost:1234` endpoint, so existing tools work unchanged. Bionic agent adds Auto Review for shell commands (1.1.0, 2026-08-27). | LM Link is **remote access, not scheduling** — its own docs say it lets you "load models on remote devices and use them as if they were local," not distribute or balance work across them. Free **during preview only**: LM Studio states there will be "both free as well as paid plans once the feature is released for General Availability." No device limit stated either way. Closed source. Raised $19.32M — not bootstrapped, contrary to common belief. | n/a | 2026-09-05 |
-| [llama.cpp](https://github.com/ggml-org/llama.cpp) | The engine most other things wrap. CPU and GPU, every quantization format that matters, Metal and CUDA. MIT. | Not a service manager or a fleet tool. Ships very fast — roughly a dozen tagged builds a day — so any performance number you read about it has a short shelf life. | 127,144 | 2026-09-05 |
-| [MLX](https://github.com/ml-explore/mlx) | Apple's array framework for Apple silicon. Distributed support: tensor and pipeline parallelism, `mlx.distributed_config` auto-discovers Thunderbolt topology, `mlx.launch` starts jobs over SSH. MIT. | Apple silicon only. The multi-Mac story is CLI, hostfile, and SSH — no registry, scheduler, failover, or quotas. Aimed at researchers, not operators. | 28,312 | 2026-09-05 |
-| [llama-swap](https://github.com/mostlygeek/llama-swap) | One binary, one YAML. Fronts llama.cpp/vLLM and hot-swaps models on demand with TTL unload. MIT. | Single host. No multi-machine placement, no cost awareness. | 5,580 | 2026-09-05 |
+| [Ollama](https://github.com/ollama/ollama) | Local model runner. OpenAI-compatible and Anthropic `/v1/messages` endpoints (v0.14.0, 2026-01-10). Third-party gateway provider for Claude Desktop (v0.33.0, 2026-08-21). MIT. | Not a fleet manager. No scheduling across machines, no job cost estimate, no spend gate. Cloud tier went per-token on 2026-08-31 with credits and no hard cap. | 180,225 | 2026-09-05 |
+| [LM Studio](https://lmstudio.ai/) | GUI runtime, MLX and GGUF. [LM Link](https://lmstudio.ai/link) connects your devices over an encrypted Tailscale mesh so one machine can use models loaded on another, served at `localhost:1234` so existing tools work unchanged. | LM Link is remote access, not scheduling. Its docs say you "load models on remote devices and use them as if they were local." No distribution or balancing. Free during preview only; LM Studio says there will be "both free as well as paid plans" at GA. Closed source. | n/a | 2026-09-05 |
+| [llama.cpp](https://github.com/ggml-org/llama.cpp) | The engine most other things wrap. Metal and CUDA, every quantization that matters. MIT. | Not a service manager. Ships about a dozen tagged builds a day, so published benchmark numbers go stale fast. | 127,144 | 2026-09-05 |
+| [MLX](https://github.com/ml-explore/mlx) | Apple's array framework. Distributed support with tensor and pipeline parallelism; `mlx.distributed_config` finds the Thunderbolt topology, `mlx.launch` starts jobs over SSH. MIT. | Apple silicon only. Multi-Mac is CLI, hostfile and SSH. No registry, scheduler, failover or quotas. Built for researchers. | 28,312 | 2026-09-05 |
+| [llama-swap](https://github.com/mostlygeek/llama-swap) | One binary, one YAML, hot-swaps models with TTL unload. MIT. | Single host. | 5,580 | 2026-09-05 |
 
-## Fleet and routing across machines you own
+## Across machines you own
 
-This is the layer that changed most recently, and the change went against building anything yourself.
+The layer that changed most recently, and it changed against building anything.
 
-| Tool | What it does | What it does **not** do | Stars | Checked |
+| Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
-| [NVIDIA PAIR](https://github.com/NVIDIA/Personal-AI-Router) | Published **2026-09-03**. Apache-2.0. Discovers machines on your LAN, pairs with a six-digit PIN, routes each inference request to one eligible node. Supports GeForce RTX 20-series and newer, RTX PRO, DGX Spark, **and Apple M4+ silicon**, on Windows 11, Linux, macOS. Works with Ollama and LM Studio. | Its own README: "does not pool GPU memory, combine GPUs into a larger logical GPU, shard one model across machines, or split an in-flight inference request between nodes" and "does not consider GPU model, available memory, model warmness, or how expensive a request looks." Inference only, LAN only, no cloud nodes, no budget concept. | 476 | 2026-09-05 |
-| [exo](https://github.com/exo-explore/exo) | Heterogeneous local clustering that genuinely shards models across devices, including Mac + DGX Spark together. Apache-2.0. Published measurements: 2.8x on heterogeneous DGX Spark + M3 Ultra; 2.2x under concurrency. | Single-request decode does not scale linearly — their own figure is 49.3 → 39.7 tok/s going from 1 to 3 nodes. Sharding buys capacity and concurrency, not single-stream speed. No cost or policy layer. | 47,265 | 2026-09-05 |
-| [GPUStack](https://github.com/gpustack/gpustack) | Cluster manager for NVIDIA/AMD/Ascend workers with automatic placement and an OpenAI-compatible gateway. Apache-2.0. | **No macOS workers since v2** (2025-11-23) — everything runs in containers and macOS does not allow GPU access from containers. Still widely and wrongly recommended as the Mac + NVIDIA answer. See [CORRECTIONS.md](CORRECTIONS.md). | 5,609 | 2026-09-05 |
-| [LiteLLM](https://github.com/BerriAI/litellm) | Proxy with virtual keys, hard budgets per key/team/model with resets, fallback chains local → cloud, spend dashboards. | Governs **API tokens**, not machines or GPU rentals. A budget here never sees a `sky launch`. | 58,097 | 2026-09-05 |
-| [NeMo Switchyard](https://developer.nvidia.com/blog/route-ai-agent-workloads-across-models-with-nvidia-nemo-switchyard) | Open-source routing of each agent step to the best model by quality/latency/cost (2026-08-11). | Routes across **models**, not across **machines**. Different problem from PAIR despite similar framing. | n/a | 2026-09-05 |
+| [NVIDIA PAIR](https://github.com/NVIDIA/Personal-AI-Router) | Published 2026-09-03. Finds machines on your LAN, pairs with a six-digit PIN, sends each request to a free node. GeForce RTX 20-series and newer, RTX PRO, DGX Spark, and Apple M4+. Windows 11, Linux, macOS. Ollama and LM Studio. Apache-2.0. | From its README: "does not pool GPU memory, combine GPUs into a larger logical GPU, shard one model across machines, or split an in-flight inference request between nodes." Also "does not consider GPU model, available memory, model warmness, or how expensive a request looks." Inference only, LAN only, no budget concept. | 476 | 2026-09-05 |
+| [exo](https://github.com/exo-explore/exo) | Actually shards models across devices, including a Mac and a DGX Spark together. Reports 2.8x on that pairing and 2.2x under concurrency. Apache-2.0. | Single-request decode gets worse with more nodes, not better: their own figure is 49.3 → 39.7 tok/s from 1 to 3. You are buying capacity and concurrency, not speed. No cost or policy layer. | 47,265 | 2026-09-05 |
+| [GPUStack](https://github.com/gpustack/gpustack) | Cluster manager for NVIDIA, AMD and Ascend workers, automatic placement, OpenAI-compatible gateway. Apache-2.0. | No macOS workers since v2 (2025-11-23). Models run in containers and macOS won't give a container GPU access. Still recommended everywhere as the Mac plus NVIDIA answer. See [CORRECTIONS.md](CORRECTIONS.md). | 5,609 | 2026-09-05 |
+| [LiteLLM](https://github.com/BerriAI/litellm) | Proxy with virtual keys, hard budgets per key or team or model, fallback chains, spend dashboards. | Governs API tokens. A budget here never sees a `sky launch`. | 58,097 | 2026-09-05 |
+| [NeMo Switchyard](https://developer.nvidia.com/blog/route-ai-agent-workloads-across-models-with-nvidia-nemo-switchyard) | Routes each agent step to the best model by quality, latency and cost (2026-08-11). | Routes across models, not machines. Not the same problem as PAIR despite the similar pitch. | n/a | 2026-09-05 |
 
-## Cloud orchestration and burst
+## Cloud
 
-| Tool | What it does | What it does **not** do | Stars | Checked |
+| Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
-| [SkyPilot](https://github.com/skypilot-org/skypilot) | Cross-cloud placement with a cost optimizer that prints $/hr per candidate before launch. `--dryrun` exposes it to agents. `resources.max_hourly_cost` shipped in v0.13.0 (2026-07-22). Admin Policies can reject or mutate launches. Apache-2.0, $20M seed 2026-07-21. | SSH node pools are **Debian-based Linux only** — no Macs as compute nodes. Estimates $/hr, not job duration. Admin Policies ship 13 examples, **none** for cost or approval. Its Agent Skill never mentions budgets. | 10,563 | 2026-09-05 |
-| [dstack](https://github.com/dstackai/dstack) | Vendor-agnostic orchestration across clouds, Kubernetes, and bare metal; fleets with max-price and idle-duration. MPL-2.0. | Same shape as SkyPilot with far less momentum. No Apple silicon compute story. | 2,237 | 2026-09-05 |
-| [NVIDIA Brev Connect](https://docs.nvidia.com/brev/concepts/brev-connect) | Registers a Linux machine you own into NVIDIA's console: NetBird mesh, NVML hardware profiling, SSH, sharing. Free. | **Linux only.** Deliberately does not deploy workloads to registered machines — it is connectivity and inventory, not orchestration. | n/a | 2026-09-05 |
+| [SkyPilot](https://github.com/skypilot-org/skypilot) | Cross-cloud placement with an optimizer that prints $/hr per candidate before you launch. `--dryrun` exposes that to an agent. `resources.max_hourly_cost` shipped in v0.13.0 (2026-07-22). Admin Policies can reject or rewrite a launch. Apache-2.0, $20M seed 2026-07-21. | SSH node pools require a "Debian-based OS (tested on Debian 11)". No Macs as compute nodes. Estimates $/hr, never job duration. Admin Policies ship 13 examples and none of them is about cost or approval. | 10,563 | 2026-09-05 |
+| [dstack](https://github.com/dstackai/dstack) | Same shape as SkyPilot across clouds, Kubernetes and bare metal. Fleets take max-price and idle-duration. MPL-2.0. | Much less momentum. No Apple silicon story. | 2,237 | 2026-09-05 |
+| [Brev Connect](https://docs.nvidia.com/brev/concepts/brev-connect) | Registers a Linux box you own into NVIDIA's console. NetBird mesh, NVML profiling, SSH, sharing. Free. | Linux only. Deliberately will not deploy workloads to registered machines. Inventory and connectivity, not orchestration. | n/a | 2026-09-05 |
 
 ## Fit and cost estimation
 
-The most crowded and least reliable category. Read [CORRECTIONS.md](CORRECTIONS.md) entry 6 first.
+Crowded, and the least reliable category here. Read [CORRECTIONS.md](CORRECTIONS.md) entry 7 first.
 
-| Tool | What it does | What it does **not** do | Stars | Checked |
+| Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
-| [llmfit](https://github.com/AlexsJones/llmfit) | The category winner. What runs on the box in front of you, including Apple-silicon unified memory, with hardware profiles and confidence labels. **Ships its own MCP server**, so agents can query it directly. MIT. | Inference only — no fine-tune time or cost. Cross-machine fleet mode is an open PR, not a feature. | 34,917 | 2026-09-05 |
-| [Train-in-Silence](https://github.com/hlpun/Train-in-Silence) | Fine-tune VRAM/FLOPs/time/$ across 14 providers, exposed to coding agents. | Its own README: the estimation model is fixed with **no built-in calibration**. No Apple silicon. No pushes since 2026-08-04, zero issues ever filed. | 101 | 2026-09-05 |
-| [MLX-LoRA-Studio](https://github.com/Goekdeniz-Guelmez/MLX-LoRA-Studio) | LoRA fine-tuning on Mac with a live memory estimate and a ResourceGuard. | No wall-clock time or cost estimate. Mac only. | 262 | 2026-09-05 |
-| [LocalScore](https://github.com/cjpais/LocalScore) | Opt-in public database of standardized local benchmark results. Apache-2.0. | Fixed benchmark models, not your job. Accumulated roughly 4,100 results in 17 months — useful, but far too sparse to predict an arbitrary model/quant/runtime/hardware combination. | 128 | 2026-09-05 |
-| Web VRAM calculators | Fine for the fit question: does it fit in memory. | Silent or wrong on the speed question. See below. | — | 2026-09-05 |
+| [llmfit](https://github.com/AlexsJones/llmfit) | What runs on the machine in front of you, Apple-silicon unified memory included, with confidence labels. Ships an MCP server so an agent can ask it directly. MIT. | Inference only. No fine-tune time or cost. Fleet mode is an open PR. | 34,917 | 2026-09-05 |
+| [Train-in-Silence](https://github.com/hlpun/Train-in-Silence) | Fine-tune VRAM, FLOPs, time and dollars across 14 providers, exposed to coding agents. | Its README: the estimation model is "fixed with no built-in calibration." No Apple silicon. No commits since 2026-08-04, zero issues ever filed. | 101 | 2026-09-05 |
+| [MLX-LoRA-Studio](https://github.com/Goekdeniz-Guelmez/MLX-LoRA-Studio) | LoRA on Mac with a live memory estimate and a ResourceGuard. | No wall-clock or cost estimate. | 262 | 2026-09-05 |
+| [LocalScore](https://github.com/cjpais/LocalScore) | Public database of standardized local benchmark results, opt-in. Apache-2.0. | Fixed models, not your job. About 4,100 results in 17 months, which is far too sparse to predict an arbitrary model and quant and runtime and GPU combination. | 128 | 2026-09-05 |
 
-## Agent-side controls
+## Stopping an agent from spending your money
 
-If your concern is an agent spending money or touching infrastructure, this is the layer that already
-exists — and it is not a third-party product.
+This layer exists already, and it isn't a third-party product.
 
-| Control | What it does | What it does **not** do | Checked |
+[Claude Code hooks](https://code.claude.com/docs/en/hooks): a `PreToolUse` hook returns
+`allow`/`deny`/`ask`/`defer` and can match on a command pattern. An `ask` forces a prompt even in auto
+mode. Nothing in it knows about dollars, so the cost logic is yours to write, roughly 60 lines around
+`sky launch --dryrun`.
+
+[Permission modes](https://code.claude.com/docs/en/permission-modes): auto mode has been the default
+since 2026-08-14. In a 1,053-case study the classifier blocked 89% of dangerous commands against 13.6%
+for the humans. Its criteria cover shared infrastructure and autonomous loops, but there is no spend,
+billing, budget or purchase criterion anywhere in them. Agent-initiated cloud spend is the one thing
+here that is genuinely still ungated.
+
+Perplexity Portable Computer asks before any step escalates to a cloud model and runs a PII classifier
+over what leaves. Hybrid Compute does the same on Apple silicon since 2026-09-01, 24 GB minimum.
+Subscription product; Portable Computer needs a DGX Spark or a Linux box with an RTX 24 GB or better.
+
+LM Studio's Bionic agent reviews shell commands before running them (1.1.0, 2026-08-27).
+
+## Hardware
+
+Decode speed on a memory-bound setup tracks memory bandwidth divided by active bytes per token. Not
+FLOPS, not capacity. A small card with fast memory beats a big box with slow memory on any model that
+fits in both.
+
+| Machine | Memory | Bandwidth | Price |
 |---|---|---|---|
-| [Claude Code hooks](https://code.claude.com/docs/en/hooks) | A `PreToolUse` hook returns `allow`/`deny`/`ask`/`defer` and can filter on a command pattern. A hook's `ask` forces a prompt even in auto mode. | Nothing about dollars. You write the cost logic yourself; it is roughly 60 lines around `sky launch --dryrun`. | 2026-09-05 |
-| [Claude Code permission modes](https://code.claude.com/docs/en/permission-modes) | Auto mode has been the default since 2026-08-14, with a classifier catching 89% of dangerous commands versus 13.6% for humans in the same test. Explicit ask rules still force a prompt. | The classifier's criteria include shared infrastructure and autonomous agent loops but contain **no spend, billing, budget, or purchase criterion.** Tool-initiated cloud spend is the one genuinely ungated seam. | 2026-09-05 |
-| Perplexity Portable Computer / Hybrid Compute | Per-step approval before any step escalates to a cloud model, with a PII classifier over outgoing context. Hybrid Compute on Apple silicon since 2026-09-01, 24 GB minimum. | Subscription product. Portable Computer needs a DGX Spark or a Linux box with an RTX ≥24 GB. | 2026-09-05 |
-| LM Studio Bionic Auto Review | Reviews shell commands before execution (1.1.0, 2026-08-27). | Local tool execution only. | 2026-09-05 |
+| Mac Studio M5 Ultra | up to 512 GB unified | 1.2 TB/s | from $5,499, 512 GB config late Oct 2026 |
+| RTX 4070 | 12 GB | 504 GB/s | consumer |
+| DGX Spark | 128 GB unified | 273 GB/s | $4,699, up from $3,999 on 2026-02-23 |
+| AMD Strix Halo | 128 GB LPDDR5X | — | ~$2,000–3,500 |
 
----
+The 4070 beats the Spark on decode for anything that fits in 12 GB. Buy the Spark for CUDA
+compatibility and capacity, not speed. Capacity and speed are separate purchases and neither is an
+upgrade over the other.
 
-## Hardware: the number that actually predicts speed
+## If you own
 
-For local inference on a memory-bound setup, decode speed tracks **memory bandwidth divided by active
-bytes per token**, not headline FLOPS and not capacity. This is why a small fast-memory GPU beats a
-large slow-memory box on a model that fits in both.
+**A Mac and a gaming PC.** These two are not substitutes, so pick by problem. PAIR distributes
+requests across both machines, which is what you want when work queues up. LM Link lets the laptop use
+a model loaded on the desktop, which is what you want when one machine has the VRAM and the other has
+your keyboard. Both free, both an evening. Don't use GPUStack, it dropped macOS.
 
-| Machine | Memory | Bandwidth | Price | Note |
-|---|---|---|---|---|
-| Mac Studio M5 Ultra | up to 512 GB unified | 1.2 TB/s | from $5,499; 512 GB config late Oct 2026 | Announced 2026-08-25. Capacity leader. 512 GB configs land well above the base price. |
-| RTX 4070 | 12 GB VRAM | 504 GB/s | consumer | Beats a DGX Spark on decode for any model that fits in 12 GB. |
-| DGX Spark | 128 GB unified | 273 GB/s | $4,699 | Price rose from $3,999 on 2026-02-23. Buy it for CUDA compatibility and capacity, not speed. |
-| AMD Strix Halo | 128 GB LPDDR5X | — | ~$2,000–3,500 mini-PCs | Strong on MoE models where active parameters are small. |
+**One machine.** llmfit. It has an MCP server so your agent can ask it directly.
 
-The practical consequence: capacity and speed are separate purchases. A 128 GB box that runs a large
-model slowly and a 12 GB card that runs a small model quickly solve different problems, and neither
-is an upgrade over the other.
+**An occasional rented GPU.** SkyPilot with `--dryrun` for the per-candidate cost, and
+`resources.max_hourly_cost` as a ceiling. If an agent is doing the launching, add a `PreToolUse` hook,
+because the classifier doesn't count dollars.
 
----
+**An idea for a knowledge graph that predicts placement across everyone's hardware.** Don't. It's
+roughly a million meaningful cells that go stale in days as runtimes ship, and the best-instrumented
+public effort in this niche collects a few hundred observations a month.
 
-## If you own X, do Y
+## Build log
 
-The short version, for the three common cases.
+[`build-log/`](build-log/) is the same setup on real hardware: two Macs, a 12 GB CUDA box, a NAS,
+occasional rented GPUs. One entry per phase with pasted output, what broke, what it cost.
 
-**A Mac and a gaming PC, and you want them to work together.** Pick by which problem you have, because
-these two tools are not substitutes. **NVIDIA PAIR** distributes requests: it discovers both machines
-and sends each inference request to whichever node is free, which is what you want when work queues up.
-**LM Studio LM Link** does remote access: your laptop loads and uses a model running on the desktop, at
-`localhost:1234`, which is what you want when one machine has the VRAM and the other has your keyboard.
-Both are free today and both take an evening. Do not build anything. Do not use GPUStack for this — it
-dropped macOS workers.
+Empty until the phases actually run.
 
-**One machine, and you want to know what fits.** llmfit. It has an MCP server, so your coding agent
-can ask it directly. Stop reading calculator sites.
+## Corrections
 
-**You want to rent a GPU occasionally without surprises.** SkyPilot, and use `--dryrun` to see the
-per-candidate cost before launch, plus `resources.max_hourly_cost` as a ceiling. If an agent is
-issuing the launch, add a `PreToolUse` hook on the launch command — the auto-mode classifier does not
-consider dollars.
+Open an issue with the claim, a primary source, and your check date. Details at the end of
+[CORRECTIONS.md](CORRECTIONS.md).
 
-**You want a knowledge graph that predicts placement across everyone's hardware.** Don't. The
-combination space is roughly a million meaningful cells that decay in days as runtimes ship, and the
-best-instrumented public effort in this niche collects a few hundred observations a month. The
-arithmetic does not close.
-
----
-
-## The build log
-
-[`build-log/`](build-log/) documents an actual build on actual heterogeneous hardware — Apple silicon,
-a consumer CUDA box, a NAS, and occasional rented GPUs — one entry per phase, with pasted output,
-what broke, what it cost, and elapsed time. Failure is a first-class field, because that is the part
-vendor documentation structurally cannot publish.
-
-Entries appear as phases are completed. Empty sections are honest, not aspirational.
-
----
-
-## Contributing
-
-Corrections are the most valuable contribution. Open an issue with the claim, a primary source, and
-your check date. See the end of [CORRECTIONS.md](CORRECTIONS.md).
-
-Feature requests to turn this into a tool will be declined, with thanks. See "what this is not."
+Requests to turn this into a tool will be declined.

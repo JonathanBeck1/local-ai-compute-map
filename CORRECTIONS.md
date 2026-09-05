@@ -1,113 +1,110 @@
 # Corrections
 
-Claims about personal AI compute that are widely repeated and are false, stale, or misquoted as of
-the check date. This page exists first because it is the reason to trust the rest of the repo: the
-same method that produced the map produced these, and several of them were errors in my own earlier
-notes before they were anyone else's.
+Claims about local AI compute that get repeated and are wrong. Four of these were wrong in my own
+notes first, which is the reason this page leads the repo instead of hiding at the bottom.
 
-Each entry gives the claim as usually stated, what is actually true, the primary source, and the date
-I checked it.
+Each one: the claim as usually stated, what's actually true, the source, the date I checked.
 
----
+## 1. GPUStack gives you one cluster across NVIDIA, AMD and Apple silicon
 
-## 1. "GPUStack gives you one cluster across NVIDIA, AMD, and Apple silicon"
+Wrong since v2. Checked 2026-09-05.
 
-**Status: false since v2.** — verified 2026-09-05
+Its README says "macOS is not supported for GPUStack worker nodes." The maintainer's explanation in
+the project discussions: from v2 all models run in containers, and macOS won't give a container GPU
+access. The v2 line landed 2025-11-23.
 
-GPUStack is still routinely recommended as the single free tool that spans a Mac and a CUDA box. Its
-own README now states that macOS is not supported for GPUStack worker nodes. The maintainer's
-explanation, in the project's discussions, is that from v2 all models run inside containers and macOS
-does not permit GPU access from containers. The v2 line landed 2025-11-23.
-
-This matters because GPUStack is the tool most often cited as proof that the heterogeneous
-Apple + NVIDIA fleet problem is already solved by free software. For inference across a Mac and a PC
-today, the working answers are exo and NVIDIA PAIR, not GPUStack.
+This one matters because GPUStack is the tool most often cited as proof that free software already
+solves the mixed Mac and NVIDIA problem. It doesn't, and hasn't for nine months. For inference across
+a Mac and a PC today the working answers are exo and PAIR.
 
 - https://github.com/gpustack/gpustack
 - https://github.com/gpustack/gpustack/discussions/3704
 
-## 2. "Perplexity said macOS is not on the roadmap for local AI"
+## 2. Perplexity said macOS is not on the roadmap
 
-**Status: misquote, and superseded.** — verified 2026-09-05
+Misquote, and overtaken anyway. Checked 2026-09-05.
 
-The widely-circulated line traces to VentureBeat's own editorial phrasing that macOS was
-"conspicuously absent from the roadmap." Perplexity's actual quoted statement was "We're very focused
-right now on Nvidia hardware," which is a statement of present focus, not a roadmap exclusion.
+The line traces to VentureBeat's own phrasing, that macOS was "conspicuously absent from the roadmap."
+What Perplexity actually said was "We're very focused right now on Nvidia hardware." That's present
+focus, not exclusion.
 
-It is also superseded twice over. Perplexity shipped a Mac product on 2026-04-16, and on 2026-09-01
-shipped Hybrid Compute for Apple silicon: a task starts in the cloud, steps touching private data are
-routed to a local model, and an on-device classifier substitutes stand-ins before anything leaves the
-machine. It requires 24 GB of unified memory.
+They shipped a Mac product on 2026-04-16, and on 2026-09-01 shipped Hybrid Compute for Apple silicon:
+a task starts in the cloud, steps touching private data run locally, an on-device classifier swaps in
+stand-ins before anything leaves. Needs 24 GB unified.
 
 - https://venturebeat.com/infrastructure/perplexity-partners-with-nvidia-to-launch-portable-computer-a-fully-local-ai-agent-with-zero-token-costs
 - https://www.macstories.net/news/perplexity-introduces-hybrid-compute-to-keep-sensitive-data-local/
 
-## 3. "NVIDIA will never route work to Apple silicon"
+## 3. NVIDIA will never route work to Apple silicon
 
-**Status: false as of 2026-09-03.** — verified 2026-09-05
+Wrong as of 2026-09-03. Checked 2026-09-05.
 
-This was a reasonable inference from NVIDIA's product line right up until it wasn't. Brev Connect is
-Linux-only. Sync Cluster Assistant handles DGX Sparks only. NeMo Switchyard routes across models, not
-machines. The conclusion that NVIDIA structurally would not touch macOS was widely drawn, including
-by me.
+A fair read of their product line until it wasn't. Brev Connect is Linux only, Sync handles DGX Sparks
+only, Switchyard routes models rather than machines. I drew the conclusion too, in writing.
 
-On 2026-09-03 NVIDIA published PAIR (Personal AI Router), Apache-2.0, which discovers machines on a
-local network and routes inference requests across GeForce RTX 20-series and newer, RTX PRO, DGX
-Spark, **and Apple M4 or newer silicon**, on Windows 11, Linux, and macOS, integrating with Ollama
-and LM Studio.
+Then on 2026-09-03 NVIDIA published PAIR, Apache-2.0, which discovers machines on a LAN and routes
+inference across GeForce RTX 20-series and newer, RTX PRO, DGX Spark, and Apple M4 or newer, on
+Windows 11, Linux and macOS, through Ollama and LM Studio.
 
-See the map for what PAIR does not do, which is substantial. But the categorical claim is dead.
+What PAIR doesn't do is in the [map](README.md), and it's a long list. But the categorical version of
+this claim is dead.
 
 - https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/
 - https://github.com/NVIDIA/Personal-AI-Router
 
-## 4. "exo raised about $250K from crypto funds"
+## 4. LM Link routes work across your machines, free, up to 5 devices
 
-**Status: wrong company.** — verified 2026-09-05
+Wrong three ways, and this was mine. Checked 2026-09-05.
 
-The Tracxn page commonly cited for this describes a different Exo Labs: a Seattle microscope-camera
-company founded in 2011, since deadpooled, which raised roughly $2.98M in 2012–2014. The exo that
-builds heterogeneous local AI clustering is a London company founded in March 2024 by Alex Cheema and
-Mohamed Baioumy. Its funding is not public; contemporaneous coverage says only that it raised an
-undisclosed amount from private investors.
+It is remote access, not routing. Its docs say you "load models on remote devices and use them as if
+they were local" — no distribution of work, no balancing. There is no stated device limit anywhere,
+so the "5 devices" figure was invented. And it's free during the preview period only: LM Studio says
+there will be "both free as well as paid plans once the feature is released for General Availability."
 
-If you are sizing this category by how much money it has attracted, do not count the $250K.
+Worth separating from PAIR, which does route requests. They solve different problems and get treated
+as interchangeable constantly, including by me until I opened the page.
+
+- https://lmstudio.ai/link
+
+## 5. exo raised about $250K from crypto funds
+
+Wrong company. Checked 2026-09-05.
+
+The Tracxn page usually cited is a different Exo Labs: a Seattle microscope-camera business founded
+2011, since dead, which raised about $2.98M in 2012–2014. The exo that does heterogeneous local
+clustering is London, founded March 2024 by Alex Cheema and Mohamed Baioumy, and its funding isn't
+public. Coverage at the time says only an undisclosed amount from private investors.
+
+If you're sizing this category by money raised, don't count the $250K.
 
 - https://github.com/exo-explore/exo
 - https://www.canonical.cc/portfolio/exo-labs
 
-## 5. "LM Studio is bootstrapped"
+## 6. LM Studio is bootstrapped
 
-**Status: false.** — verified 2026-09-05
-
-LM Studio raised $19.32M, in a round dated 2025-05-30. It is frequently described as a bootstrapped
-indie project in comparisons against funded competitors.
+$19.32M, round dated 2025-05-30. Checked 2026-09-05.
 
 - https://www.cbinsights.com/company/lm-studio/financials
 
-## 6. "A VRAM calculator tells you how fast a model will run"
+## 7. A VRAM calculator tells you how fast a model will run
 
-**Status: category error.** — verified 2026-09-05
+Category error. Checked 2026-09-05.
 
-Fit and speed are different questions. Whether weights fit is arithmetic on parameter count,
-quantization, and context. Decode speed on a memory-bound local setup is approximately memory
-bandwidth divided by active bytes per token, which is why an RTX 4070 at 504 GB/s decodes a
-12 GB-resident model faster than a DGX Spark at 273 GB/s despite the Spark having 128 GB of unified
-memory. Most published calculators answer the fit question and are silent, or wrong, on the speed
-question.
+Fit and speed are different questions. Fit is arithmetic on parameters, quantization and context.
+Decode speed on a memory-bound machine is roughly bandwidth over active bytes per token, which is why
+an RTX 4070 at 504 GB/s beats a DGX Spark at 273 GB/s on anything that fits in 12 GB, despite the
+Spark having ten times the memory. Most calculators answer the first question and say nothing useful
+about the second.
 
-Two of the tools that do attempt cost or time estimates say so themselves: Train-in-Silence's README
-states its estimation model is fixed with no built-in calibration, and quantprobe labels its Mac
-presets as extrapolated rather than measured.
+Two tools that do attempt time or cost say so themselves: Train-in-Silence's README calls its
+estimation model "fixed with no built-in calibration," and quantprobe labels its Mac presets
+extrapolated rather than measured.
 
 - https://github.com/hlpun/Train-in-Silence
 - https://github.com/AlexsJones/llmfit
 
----
+## Reporting one
 
-## How to report a correction
-
-Open an issue with the claim, the primary source that contradicts it, and the date you checked. A
-correction without a primary source and a date will be treated as a rumour, which is the whole
-problem this page exists to address. Corrections to my errors are especially welcome and will be
-listed here with attribution.
+Open an issue with the claim, the primary source, and your check date. No source and no date means I
+can't act on it, which is the problem this page exists for. Corrections to my own errors are the most
+useful kind and get listed here with credit.
