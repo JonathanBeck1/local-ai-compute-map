@@ -1,0 +1,24 @@
+# Documents and archives are never committed here; this repo is text and evidence only.
+*.pdf
+*.zip
+*.tar.gz
+
+# Secrets and machine-specific state
+.env
+.env.*
+*.key
+*.pem
+*.crt
+id_rsa*
+id_ed25519*
+*.tsstate
+
+# Draft entries not yet ready to be public
+build-log/**/*.draft.md
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
