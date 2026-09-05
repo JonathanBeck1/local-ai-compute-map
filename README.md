@@ -34,7 +34,7 @@ Every layer of the personal AI compute stack now has a free, first-party occupan
 arrived in the last twelve months. Runtimes are free and excellent (Ollama, LM Studio, llama.cpp,
 MLX). Fleet routing across machines you own went from a hobbyist gap to a vendor feature in one week:
 NVIDIA published PAIR on 2026-09-03, routing across RTX, DGX Spark, **and Apple silicon** on your LAN,
-and LM Studio's LM Link already did the same across up to five devices for free. Cloud orchestration
+and LM Studio's LM Link, with Tailscale, already let one machine use models loaded on another. Cloud orchestration
 is owned by SkyPilot, which now has $20M and a pre-launch cost optimizer. Fit estimation is owned by
 llmfit. Approval gates for agent actions are a feature of the coding agents themselves. The
 interesting remaining questions in this space are not "what should someone build" — they are "how
@@ -50,7 +50,7 @@ Where the model actually executes. All free, all good, differences are ergonomic
 | Tool | What it does | What it does **not** do | Stars | Checked |
 |---|---|---|---|---|
 | [Ollama](https://github.com/ollama/ollama) | Local model runner, one-command pulls, OpenAI-compatible and Anthropic `/v1/messages` endpoints (v0.14.0, 2026-01-10). Acts as a third-party gateway provider for Claude Desktop (v0.33.0, 2026-08-21). MIT. | Not a fleet manager. Does not schedule across machines, estimate job cost, or gate spend. Cloud tier moved to per-token pricing 2026-08-31 with credits and no hard cap. | 180,225 | 2026-09-05 |
-| [LM Studio](https://lmstudio.ai/) | GUI runtime, MLX and GGUF, plus **LM Link** — routes local workloads across up to 5 of your own devices over an encrypted Tailscale network, free tier. Bionic agent adds Auto Review for shell commands (1.1.0, 2026-08-27). | Closed source. LM Link is device routing, not model sharding or cost-aware placement. Raised $19.32M — not bootstrapped, contrary to common belief. | n/a | 2026-09-05 |
+| [LM Studio](https://lmstudio.ai/) | GUI runtime, MLX and GGUF, plus **[LM Link](https://lmstudio.ai/link)** — connects devices you own over an end-to-end encrypted Tailscale mesh so one machine can load and use models running on another; remote models appear at the standard `localhost:1234` endpoint, so existing tools work unchanged. Bionic agent adds Auto Review for shell commands (1.1.0, 2026-08-27). | LM Link is **remote access, not scheduling** — its own docs say it lets you "load models on remote devices and use them as if they were local," not distribute or balance work across them. Free **during preview only**: LM Studio states there will be "both free as well as paid plans once the feature is released for General Availability." No device limit stated either way. Closed source. Raised $19.32M — not bootstrapped, contrary to common belief. | n/a | 2026-09-05 |
 | [llama.cpp](https://github.com/ggml-org/llama.cpp) | The engine most other things wrap. CPU and GPU, every quantization format that matters, Metal and CUDA. MIT. | Not a service manager or a fleet tool. Ships very fast — roughly a dozen tagged builds a day — so any performance number you read about it has a short shelf life. | 127,144 | 2026-09-05 |
 | [MLX](https://github.com/ml-explore/mlx) | Apple's array framework for Apple silicon. Distributed support: tensor and pipeline parallelism, `mlx.distributed_config` auto-discovers Thunderbolt topology, `mlx.launch` starts jobs over SSH. MIT. | Apple silicon only. The multi-Mac story is CLI, hostfile, and SSH — no registry, scheduler, failover, or quotas. Aimed at researchers, not operators. | 28,312 | 2026-09-05 |
 | [llama-swap](https://github.com/mostlygeek/llama-swap) | One binary, one YAML. Fronts llama.cpp/vLLM and hot-swaps models on demand with TTL unload. MIT. | Single host. No multi-machine placement, no cost awareness. | 5,580 | 2026-09-05 |
@@ -124,9 +124,13 @@ is an upgrade over the other.
 
 The short version, for the three common cases.
 
-**A Mac and a gaming PC, and you want them to work together.** Install NVIDIA PAIR on both, or LM
-Studio with LM Link. Both are free, both take an evening, and between them they cover routing across
-your machines. Do not build anything. Do not use GPUStack for this — it dropped macOS workers.
+**A Mac and a gaming PC, and you want them to work together.** Pick by which problem you have, because
+these two tools are not substitutes. **NVIDIA PAIR** distributes requests: it discovers both machines
+and sends each inference request to whichever node is free, which is what you want when work queues up.
+**LM Studio LM Link** does remote access: your laptop loads and uses a model running on the desktop, at
+`localhost:1234`, which is what you want when one machine has the VRAM and the other has your keyboard.
+Both are free today and both take an evening. Do not build anything. Do not use GPUStack for this — it
+dropped macOS workers.
 
 **One machine, and you want to know what fits.** llmfit. It has an MCP server, so your coding agent
 can ask it directly. Stop reading calculator sites.

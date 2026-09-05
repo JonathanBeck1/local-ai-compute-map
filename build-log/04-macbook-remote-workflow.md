@@ -15,7 +15,7 @@ MacBook Pro, Mac mini, Linux workstation
 
 ## Planned steps
 
-- Evaluate LM Studio LM Link across the fleet.
+- Evaluate LM Studio LM Link: use the Linux box's models from the MacBook at `localhost:1234`. This is remote access, not scheduling — record whether that is actually the thing that was missing.
 - Evaluate NVIDIA PAIR: note that only the M4 Mac mini meets its Apple-silicon requirement, so this is a partial test of a tool the map describes in full.
 - Record whether either actually changes the daily workflow, or is merely impressive once.
 
