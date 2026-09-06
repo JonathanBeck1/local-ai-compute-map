@@ -1,24 +1,16 @@
 # Local AI compute, September 2026
 
-What the tools for running AI on your own hardware actually do, and what they don't. Every row has a date. [VERIFY.md](VERIFY.md) shows how to re-check any of it. [CORRECTIONS.md](CORRECTIONS.md) lists seven claims about this space that are wrong, including four I had wrong myself.
+I spent ten days trying to find a product to build in personal AI compute orchestration. There isn't one. Every layer already has something free sitting in it, usually shipped by the vendor.
 
-Star counts and licenses checked 2026-09-05. Feature claims checked 2026-09-03 to 2026-09-05.
+What I got instead was this: a list of what these tools actually do, and more usefully what they don't, with a date on every row. I'm publishing it because most of the guides I read on the way were repeating things that stopped being true months ago. One of them was mine.
 
-Written with heavy use of an AI coding agent. Method and its limits: [VERIFY.md](VERIFY.md#method).
+No tool here. No install, no CLI, nothing to configure. If you came looking for a control plane for a mixed Mac and NVIDIA setup, the free options below have it covered, and the last real gap closed on 2026-09-03 when NVIDIA shipped a router that includes Macs.
 
-## Why this exists
-
-I spent about ten days working out whether there was a product to build in personal AI compute orchestration. There isn't. Every layer already has a free first-party occupant.
-
-Runtimes: Ollama, LM Studio, llama.cpp, MLX. Cloud: SkyPilot. Fit estimation: llmfit. Cross-machine routing was the last open gap, and NVIDIA closed it on 2026-09-03 with PAIR, which routes to Macs.
-
-The survey I did on the way turned out to be worth more than the product idea, mostly because the guides I was reading were stale. So this is the survey.
-
-There is no tool here. No install, no CLI, no config. If you came looking for a control plane for a mixed Mac and NVIDIA setup, the answer is that the free options below cover it.
+Stars and licenses checked 2026-09-05, feature claims 2026-09-03 to 2026-09-05. [CORRECTIONS.md](CORRECTIONS.md) has seven claims about this space that are wrong; four were mine first. [VERIFY.md](VERIFY.md) has the method, including how much of this was machine-gathered and what that cost me in errors.
 
 ## Local runtimes
 
-Where the model runs. All free, differences are ergonomic.
+Where the model actually runs. All free; pick on ergonomics.
 
 | Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
@@ -30,13 +22,13 @@ Where the model runs. All free, differences are ergonomic.
 
 ## Across machines you own
 
-The layer that changed most recently, and it changed against building anything.
+This is the layer that moved while I was writing about it.
 
 | Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
 | [NVIDIA PAIR](https://github.com/NVIDIA/Personal-AI-Router) | Published 2026-09-03. Finds machines on your LAN, pairs with a six-digit PIN, sends each request to a free node. GeForce RTX 20-series and newer, RTX PRO, DGX Spark, and Apple M4+. Windows 11, Linux, macOS. Ollama and LM Studio. Apache-2.0. | From its README: "does not pool GPU memory, combine GPUs into a larger logical GPU, shard one model across machines, or split an in-flight inference request between nodes." Also "does not consider GPU model, available memory, model warmness, or how expensive a request looks." Inference only, LAN only, no budget concept. | 476 | 2026-09-05 |
 | [exo](https://github.com/exo-explore/exo) | Actually shards models across devices. Two separate published results: a DGX Spark paired with an M3 Ultra runs Llama-3.1 8B (8,192-token prompt, 32-token generation) in 2.32s vs 6.42s for the M3 Ultra alone, a 2.8x gain, by giving prefill to the Spark (3.8x faster there) and generation to the Mac (3.4x faster there). Separately, on a cluster of M4 Pro 24 GB machines running LLaMA 3.2 3B, three devices serve 108.8 TPS against one device's 49.3, a 2.2x concurrency gain. Apache-2.0. | On that same M4 Pro cluster, *single-request* decode gets worse as you add nodes: 49.3 → 44.4 → 39.7 TPS at 1, 2 and 3 devices. You are buying capacity and concurrent throughput, not single-stream speed. No cost or policy layer. | 47,265 | 2026-09-05 |
-| [GPUStack](https://github.com/gpustack/gpustack) | Cluster manager for NVIDIA, AMD and Ascend workers, automatic placement, OpenAI-compatible gateway. Apache-2.0. | No macOS workers since v2 (2025-11-23). Models run in containers and macOS won't give a container GPU access. Still recommended everywhere as the Mac plus NVIDIA answer. See [CORRECTIONS.md](CORRECTIONS.md). | 5,609 | 2026-09-05 |
+| [GPUStack](https://github.com/gpustack/gpustack) | Cluster manager for NVIDIA, AMD and Ascend workers, automatic placement, OpenAI-compatible gateway. Apache-2.0. | No macOS workers since v2, which landed 2025-11-23. Models run in containers now and macOS won't hand a container the GPU. It is still the top answer in half the forum threads about mixed Mac and NVIDIA setups, nine months on. See [CORRECTIONS.md](CORRECTIONS.md). | 5,609 | 2026-09-05 |
 | [LiteLLM](https://github.com/BerriAI/litellm) | Proxy with virtual keys, hard budgets per key or team or model, fallback chains, spend dashboards. | Governs API tokens. A budget here never sees a `sky launch`. | 58,097 | 2026-09-05 |
 | [NeMo Switchyard](https://developer.nvidia.com/blog/route-ai-agent-workloads-across-models-with-nvidia-nemo-switchyard) | Routes each agent step to the best model by quality, latency and cost (2026-08-11). | Routes across models, not machines. Not the same problem as PAIR despite the similar pitch. | n/a | 2026-09-05 |
 
@@ -50,7 +42,7 @@ The layer that changed most recently, and it changed against building anything.
 
 ## Fit and cost estimation
 
-Crowded, and the least reliable category here. Read [CORRECTIONS.md](CORRECTIONS.md) entry 7 first.
+Crowded and the least trustworthy section on this page. Read [CORRECTIONS.md](CORRECTIONS.md) entry 7 before you believe any of it.
 
 | Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
@@ -73,7 +65,7 @@ LM Studio's Bionic agent reviews shell commands before running them (1.1.0, 2026
 
 ## Hardware
 
-Decode speed on a memory-bound setup tracks memory bandwidth divided by active bytes per token. Not FLOPS, not capacity. A small card with fast memory beats a big box with slow memory on any model that fits in both.
+Decode speed tracks memory bandwidth over active bytes per token. Not FLOPS. Not capacity. A small card with fast memory beats a big box with slow memory on anything that fits in both, and this catches people out constantly.
 
 | Machine | Memory | Bandwidth | Price |
 |---|---|---|---|
@@ -82,26 +74,26 @@ Decode speed on a memory-bound setup tracks memory bandwidth divided by active b
 | DGX Spark | 128 GB unified | 273 GB/s | ~$4,699 (not listed on NVIDIA's spec page; sold via their marketplace) |
 | AMD Strix Halo | 128 GB LPDDR5X | — | ~$2,000–3,500, varies by builder (unverified) |
 
-The 4070 beats the Spark on decode for anything that fits in 12 GB. Buy the Spark for CUDA compatibility and capacity, not speed. Capacity and speed are separate purchases and neither is an upgrade over the other.
+So the 4070 beats the Spark on decode for anything that fits in 12 GB, despite the Spark having ten times the memory. Buy the Spark for capacity and CUDA compatibility. Don't buy it expecting speed. Capacity and speed are two different purchases and neither one upgrades the other.
 
 ## If you own
 
-**A Mac and a gaming PC.** These two are not substitutes, so pick by problem. PAIR distributes requests across both machines, which is what you want when work queues up. LM Link lets the laptop use a model loaded on the desktop, which is what you want when one machine has the VRAM and the other has your keyboard. Both free, both an evening. Don't use GPUStack, it dropped macOS.
+**A Mac and a gaming PC.** PAIR and LM Link both come up here and they are not substitutes. PAIR spreads requests across both machines; you want it when work queues up. LM Link lets the laptop use a model loaded on the desktop; you want it when one machine has the VRAM and the other has your keyboard. Both free, both about an evening. Not GPUStack, it dropped macOS.
 
-**One machine.** llmfit. It has an MCP server so your agent can ask it directly.
+**One machine, and you want to know what fits.** llmfit, and stop reading calculator sites. It ships an MCP server, so your coding agent can just ask it.
 
-**An occasional rented GPU.** SkyPilot with `--dryrun` for the per-candidate cost, and `resources.max_hourly_cost` as a ceiling. If an agent is doing the launching, add a `PreToolUse` hook, because the classifier doesn't count dollars.
+**An occasional rented GPU.** SkyPilot. `--dryrun` prints the per-candidate cost before you commit, `resources.max_hourly_cost` caps it. If an agent is doing the launching, write the hook, because nothing in the classifier counts dollars.
 
 **An idea for a knowledge graph that predicts placement across everyone's hardware.** Don't. Count the cells: models times quantizations times runtimes times GPU SKUs times context lengths, and every one of them goes stale as runtimes ship — llama.cpp alone tagged 100 releases across 7 days when I checked. No public benchmark commons collects anywhere near enough to keep up, and the ones that exist pin themselves to three fixed models precisely because the full space is not coverable.
 
 ## Build log
 
-[`build-log/`](build-log/) is the same setup on real hardware: two Macs, a 12 GB CUDA box, a NAS, occasional rented GPUs. One entry per phase with pasted output, what broke, what it cost.
+[`build-log/`](build-log/) is me doing this on real hardware: two Macs, a 12 GB CUDA box, a NAS, rented GPUs when something won't fit. One entry per phase, with the output pasted in and the failures left where they happened.
 
-Empty until the phases actually run.
+Empty until I've actually run them. I'd rather it sat empty than filled with things I hadn't done.
 
 ## Corrections
 
-Open an issue with the claim, a primary source, and your check date. Details at the end of [CORRECTIONS.md](CORRECTIONS.md).
+Open an issue: the claim, a primary source, the date you checked. Corrections to my own errors are the useful kind and I'll credit them.
 
-Requests to turn this into a tool will be declined.
+Requests to turn this into a tool get declined. That's the whole point of it.
