@@ -6,13 +6,20 @@ Everything here has a date on it. This page says how to re-check each kind of cl
 
 This repo was written with heavy use of an AI coding agent. That is worth stating plainly, because the whole pitch is "check the primary source," and you should know how these particular claims got here before deciding what they're worth.
 
-How it worked. Research agents gathered claims with URLs attached. Then the load-bearing ones were re-opened by hand against the primary source, one at a time. That second step is not optional and it is not a formality: of the first four claims checked that way, three matched verbatim and one was wrong in three separate ways. The wrong one had a real URL attached the whole time. A citation is not a check.
+How it worked. Research agents gathered claims with URLs attached. Then the load-bearing ones were re-opened by hand against the primary source, one at a time. That second step is not optional and it is not a formality. Roughly 20 claims went through it before this was published:
+
+- 15 confirmed, several verbatim.
+- 3 wrong. The worst was a set of real benchmark numbers filed under the wrong experiment: exo's 49.3 → 39.7 tok/s figures come from a cluster of M4 Pro machines running LLaMA 3.2 3B, not from the DGX Spark and M3 Ultra pairing they had been attached to. Also, SkyPilot ships 16 admin policy examples, not 13.
+- 2 not checkable from outside, now flagged in place rather than asserted.
+
+Every wrong one had a real, working URL attached the whole time. A citation is not a check.
+
+One more thing, because it bit me here: fetching a page through a summarizing model got a release year wrong, reporting SkyPilot v0.13.0 as July 2025 when the GitHub API gives 2026-07-22T19:30:02Z. Where a date carries weight, go to the API or the raw file, not to a summary of the page.
 
 Rows are therefore in one of two states, and the difference matters:
 
-- **Hand-checked.** Someone opened the source and read the sentence. Quoted limitations in the tables
-are all of this kind.
-- **Agent-gathered.** A URL is attached and the claim is probably right, but nobody has opened it.
+- **Hand-checked.** Someone opened the source and read the sentence. Every quoted limitation in the tables is this kind, as are all dates, prices and version numbers.
+- **Not checkable.** Said so in place. LocalScore's total result count and Strix Halo's street price are the current examples.
 
 If you are about to spend money or a weekend on the strength of a row here, open its link. That is true of any survey; it is just usually not admitted.
 

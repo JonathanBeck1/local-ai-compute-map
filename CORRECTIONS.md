@@ -72,10 +72,9 @@ Category error. Checked 2026-09-05.
 
 Fit and speed are different questions. Fit is arithmetic on parameters, quantization and context. Decode speed on a memory-bound machine is roughly bandwidth over active bytes per token, which is why an RTX 4070 at 504 GB/s beats a DGX Spark at 273 GB/s on anything that fits in 12 GB, despite the Spark having ten times the memory. Most calculators answer the first question and say nothing useful about the second.
 
-Two tools that do attempt time or cost say so themselves: Train-in-Silence's README calls its estimation model "fixed with no built-in calibration," and quantprobe labels its Mac presets extrapolated rather than measured.
+Train-in-Silence, which does attempt time and cost, says so itself. Its README: "Estimation model is fixed with no built-in calibration; future versions will calibrate using real runtimes."
 
 - https://github.com/hlpun/Train-in-Silence
-- https://github.com/AlexsJones/llmfit
 
 ## Reporting one
 
