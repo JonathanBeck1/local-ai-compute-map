@@ -1,9 +1,6 @@
 # Phase 00 — Protect and inventory
 
-**Status:** not started
-**Date:**
-**Elapsed:**
-**Cost:**
+**Status:** not started **Date:** **Elapsed:** **Cost:**
 
 ## Goal
 

@@ -1,9 +1,6 @@
 # Phase 05 — Always-on services and archive discipline
 
-**Status:** not started
-**Date:**
-**Elapsed:**
-**Cost:**
+**Status:** not started **Date:** **Elapsed:** **Cost:**
 
 ## Goal
 

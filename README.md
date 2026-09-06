@@ -1,8 +1,6 @@
 # Local AI compute, September 2026
 
-What the tools for running AI on your own hardware actually do, and what they don't. Every row has a
-date. [VERIFY.md](VERIFY.md) shows how to re-check any of it. [CORRECTIONS.md](CORRECTIONS.md) lists
-seven claims about this space that are wrong, including four I had wrong myself.
+What the tools for running AI on your own hardware actually do, and what they don't. Every row has a date. [VERIFY.md](VERIFY.md) shows how to re-check any of it. [CORRECTIONS.md](CORRECTIONS.md) lists seven claims about this space that are wrong, including four I had wrong myself.
 
 Star counts and licenses checked 2026-09-05. Feature claims checked 2026-09-03 to 2026-09-05.
 
@@ -10,17 +8,13 @@ Written with heavy use of an AI coding agent. Method and its limits: [VERIFY.md]
 
 ## Why this exists
 
-I spent about ten days working out whether there was a product to build in personal AI compute
-orchestration. There isn't. Every layer already has a free first-party occupant.
+I spent about ten days working out whether there was a product to build in personal AI compute orchestration. There isn't. Every layer already has a free first-party occupant.
 
-Runtimes: Ollama, LM Studio, llama.cpp, MLX. Cloud: SkyPilot. Fit estimation: llmfit. Cross-machine
-routing was the last open gap, and NVIDIA closed it on 2026-09-03 with PAIR, which routes to Macs.
+Runtimes: Ollama, LM Studio, llama.cpp, MLX. Cloud: SkyPilot. Fit estimation: llmfit. Cross-machine routing was the last open gap, and NVIDIA closed it on 2026-09-03 with PAIR, which routes to Macs.
 
-The survey I did on the way turned out to be worth more than the product idea, mostly because the
-guides I was reading were stale. So this is the survey.
+The survey I did on the way turned out to be worth more than the product idea, mostly because the guides I was reading were stale. So this is the survey.
 
-There is no tool here. No install, no CLI, no config. If you came looking for a control plane for a
-mixed Mac and NVIDIA setup, the answer is that the free options below cover it.
+There is no tool here. No install, no CLI, no config. If you came looking for a control plane for a mixed Mac and NVIDIA setup, the answer is that the free options below cover it.
 
 ## Local runtimes
 
@@ -69,28 +63,17 @@ Crowded, and the least reliable category here. Read [CORRECTIONS.md](CORRECTIONS
 
 This layer exists already, and it isn't a third-party product.
 
-[Claude Code hooks](https://code.claude.com/docs/en/hooks): a `PreToolUse` hook returns
-`allow`/`deny`/`ask`/`defer` and can match on a command pattern. An `ask` forces a prompt even in auto
-mode. Nothing in it knows about dollars, so the cost logic is yours to write, roughly 60 lines around
-`sky launch --dryrun`.
+[Claude Code hooks](https://code.claude.com/docs/en/hooks): a `PreToolUse` hook returns `allow`/`deny`/`ask`/`defer` and can match on a command pattern. An `ask` forces a prompt even in auto mode. Nothing in it knows about dollars, so the cost logic is yours to write, roughly 60 lines around `sky launch --dryrun`.
 
-[Permission modes](https://code.claude.com/docs/en/permission-modes): auto mode has been the default
-since 2026-08-14. In a 1,053-case study the classifier blocked 89% of dangerous commands against 13.6%
-for the humans. Its criteria cover shared infrastructure and autonomous loops, but there is no spend,
-billing, budget or purchase criterion anywhere in them. Agent-initiated cloud spend is the one thing
-here that is genuinely still ungated.
+[Permission modes](https://code.claude.com/docs/en/permission-modes): auto mode has been the default since 2026-08-14. In a 1,053-case study the classifier blocked 89% of dangerous commands against 13.6% for the humans. Its criteria cover shared infrastructure and autonomous loops, but there is no spend, billing, budget or purchase criterion anywhere in them. Agent-initiated cloud spend is the one thing here that is genuinely still ungated.
 
-Perplexity Portable Computer asks before any step escalates to a cloud model and runs a PII classifier
-over what leaves. Hybrid Compute does the same on Apple silicon since 2026-09-01, 24 GB minimum.
-Subscription product; Portable Computer needs a DGX Spark or a Linux box with an RTX 24 GB or better.
+Perplexity Portable Computer asks before any step escalates to a cloud model and runs a PII classifier over what leaves. Hybrid Compute does the same on Apple silicon since 2026-09-01, 24 GB minimum. Subscription product; Portable Computer needs a DGX Spark or a Linux box with an RTX 24 GB or better.
 
 LM Studio's Bionic agent reviews shell commands before running them (1.1.0, 2026-08-27).
 
 ## Hardware
 
-Decode speed on a memory-bound setup tracks memory bandwidth divided by active bytes per token. Not
-FLOPS, not capacity. A small card with fast memory beats a big box with slow memory on any model that
-fits in both.
+Decode speed on a memory-bound setup tracks memory bandwidth divided by active bytes per token. Not FLOPS, not capacity. A small card with fast memory beats a big box with slow memory on any model that fits in both.
 
 | Machine | Memory | Bandwidth | Price |
 |---|---|---|---|
@@ -99,37 +82,26 @@ fits in both.
 | DGX Spark | 128 GB unified | 273 GB/s | $4,699, up from $3,999 on 2026-02-23 |
 | AMD Strix Halo | 128 GB LPDDR5X | — | ~$2,000–3,500 |
 
-The 4070 beats the Spark on decode for anything that fits in 12 GB. Buy the Spark for CUDA
-compatibility and capacity, not speed. Capacity and speed are separate purchases and neither is an
-upgrade over the other.
+The 4070 beats the Spark on decode for anything that fits in 12 GB. Buy the Spark for CUDA compatibility and capacity, not speed. Capacity and speed are separate purchases and neither is an upgrade over the other.
 
 ## If you own
 
-**A Mac and a gaming PC.** These two are not substitutes, so pick by problem. PAIR distributes
-requests across both machines, which is what you want when work queues up. LM Link lets the laptop use
-a model loaded on the desktop, which is what you want when one machine has the VRAM and the other has
-your keyboard. Both free, both an evening. Don't use GPUStack, it dropped macOS.
+**A Mac and a gaming PC.** These two are not substitutes, so pick by problem. PAIR distributes requests across both machines, which is what you want when work queues up. LM Link lets the laptop use a model loaded on the desktop, which is what you want when one machine has the VRAM and the other has your keyboard. Both free, both an evening. Don't use GPUStack, it dropped macOS.
 
 **One machine.** llmfit. It has an MCP server so your agent can ask it directly.
 
-**An occasional rented GPU.** SkyPilot with `--dryrun` for the per-candidate cost, and
-`resources.max_hourly_cost` as a ceiling. If an agent is doing the launching, add a `PreToolUse` hook,
-because the classifier doesn't count dollars.
+**An occasional rented GPU.** SkyPilot with `--dryrun` for the per-candidate cost, and `resources.max_hourly_cost` as a ceiling. If an agent is doing the launching, add a `PreToolUse` hook, because the classifier doesn't count dollars.
 
-**An idea for a knowledge graph that predicts placement across everyone's hardware.** Don't. It's
-roughly a million meaningful cells that go stale in days as runtimes ship, and the best-instrumented
-public effort in this niche collects a few hundred observations a month.
+**An idea for a knowledge graph that predicts placement across everyone's hardware.** Don't. It's roughly a million meaningful cells that go stale in days as runtimes ship, and the best-instrumented public effort in this niche collects a few hundred observations a month.
 
 ## Build log
 
-[`build-log/`](build-log/) is the same setup on real hardware: two Macs, a 12 GB CUDA box, a NAS,
-occasional rented GPUs. One entry per phase with pasted output, what broke, what it cost.
+[`build-log/`](build-log/) is the same setup on real hardware: two Macs, a 12 GB CUDA box, a NAS, occasional rented GPUs. One entry per phase with pasted output, what broke, what it cost.
 
 Empty until the phases actually run.
 
 ## Corrections
 
-Open an issue with the claim, a primary source, and your check date. Details at the end of
-[CORRECTIONS.md](CORRECTIONS.md).
+Open an issue with the claim, a primary source, and your check date. Details at the end of [CORRECTIONS.md](CORRECTIONS.md).
 
 Requests to turn this into a tool will be declined.

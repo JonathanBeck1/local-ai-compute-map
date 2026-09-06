@@ -1,9 +1,6 @@
 # Phase 02 — Verify the Linux box, driver, and containers
 
-**Status:** not started
-**Date:**
-**Elapsed:**
-**Cost:**
+**Status:** not started **Date:** **Elapsed:** **Cost:**
 
 ## Goal
 

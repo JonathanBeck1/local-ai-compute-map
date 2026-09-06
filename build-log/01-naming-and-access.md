@@ -1,9 +1,6 @@
 # Phase 01 — Naming and access
 
-**Status:** not started
-**Date:**
-**Elapsed:**
-**Cost:**
+**Status:** not started **Date:** **Elapsed:** **Cost:**
 
 ## Goal
 

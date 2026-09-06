@@ -1,0 +1,13 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+# Prose is not hard-wrapped. One line per paragraph; let the editor soft-wrap.
+max_line_length = off
+# Markdown uses trailing double-space for hard breaks, so don't strip it here.
+trim_trailing_whitespace = false
