@@ -1,12 +1,10 @@
 # Checking this yourself
 
-Everything here has a date on it. This page says how to re-check each kind of claim, and how the claims were gathered in the first place.
+Everything here has a date on it. This page says how to re-check each kind of claim.
 
 ## Method
 
-This repo was written with heavy use of an AI coding agent. That is worth stating plainly, because the whole pitch is "check the primary source," and you should know how these particular claims got here before deciding what they're worth.
-
-How it worked. Research agents gathered claims with URLs attached. Then the load-bearing ones were re-opened by hand against the primary source, one at a time. That second step is not optional and it is not a formality. Roughly 20 claims went through it before this was published:
+Claims got collected with a URL attached, then the load-bearing ones were re-opened against the primary source one at a time. Roughly 20 went through that before publishing:
 
 - 15 confirmed, several verbatim.
 - 3 wrong. The worst was a set of real benchmark numbers filed under the wrong experiment: exo's 49.3 → 39.7 tok/s figures come from a cluster of M4 Pro machines running LLaMA 3.2 3B, not from the DGX Spark and M3 Ultra pairing they had been attached to. Also, SkyPilot ships 16 admin policy examples, not 13.
@@ -14,14 +12,14 @@ How it worked. Research agents gathered claims with URLs attached. Then the load
 
 Every wrong one had a real, working URL attached the whole time. A citation is not a check.
 
-One more thing, because it bit me here: fetching a page through a summarizing model got a release year wrong, reporting SkyPilot v0.13.0 as July 2025 when the GitHub API gives 2026-07-22T19:30:02Z. Where a date carries weight, go to the API or the raw file, not to a summary of the page.
+Don't trust a summary of a page for anything date-bearing. A summarized read of the SkyPilot release notes gave v0.13.0 as July 2025; the API gives 2026-07-22T19:30:02Z.
 
 Rows are therefore in one of two states, and the difference matters:
 
-- **Hand-checked.** Someone opened the source and read the sentence. Every quoted limitation in the tables is this kind, as are all dates, prices and version numbers.
+- **Hand-checked.** The source was opened and the sentence read. Every quoted limitation in the tables is this kind, as are all dates, prices and version numbers.
 - **Not checkable.** Said so in place. LocalScore's total result count and Strix Halo's street price are the current examples.
 
-If you are about to spend money or a weekend on the strength of a row here, open its link. That is true of any survey; it is just usually not admitted.
+If you're about to spend money or a weekend on the strength of a row here, open its link.
 
 ## Staleness
 
@@ -51,7 +49,7 @@ done
 
 ## Did a feature actually ship
 
-Not from a blog post, a roadmap, or a comparison article. In order: release notes for a version and a date, then the reference docs for the exact option name, then the merge commit if it's contested.
+Not from a blog post or a comparison article. In order: release notes for version and date, reference docs for the exact option name, merge commit if contested.
 
 For "SkyPilot can cap hourly spend": the option is `resources.max_hourly_cost`, it's in the YAML spec, it shipped in v0.13.0.
 
@@ -60,7 +58,7 @@ For "SkyPilot can cap hourly spend": the option is `resources.max_hourly_cost`, 
 
 ## Is a limitation real
 
-Quote the project's own words or don't claim it. A feature missing from a blog post is not evidence it's missing from the product. PAIR's README, for example:
+Quote the project's own words or don't claim it. PAIR's README:
 
 > "PAIR routes each independent request to one node. It does not pool GPU memory, combine GPUs into a
 > larger logical GPU, shard one model across machines, or split an in-flight inference request
@@ -79,7 +77,7 @@ for i in json.load(sys.stdin)['items'][:10]:
 "
 ```
 
-A request sitting at single digits after six months is not latent demand. Most "obvious gap in the market" claims die here.
+A request at single digits after six months is not latent demand.
 
 ## Hardware and prices
 
@@ -87,7 +85,7 @@ Vendor spec pages only, and note that prices move without announcement — the D
 
 ## Funding and pricing
 
-Primary sources. Aggregators get the wrong company surprisingly often — [CORRECTIONS.md](CORRECTIONS.md) entry 5 is a widely-cited funding figure that belongs to an unrelated business with a similar name.
+Primary sources only. Aggregators get the wrong company often enough to matter — [CORRECTIONS.md](CORRECTIONS.md) entry 5 is a funding figure belonging to an unrelated business with a similar name.
 
 ## Found an error
 

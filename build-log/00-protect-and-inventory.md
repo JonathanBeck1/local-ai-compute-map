@@ -1,6 +1,6 @@
 # Phase 00 — Protect and inventory
 
-**Status:** in progress — inventory done, backup blocked on hardware
+**Status:** in progress — inventory done, backup not yet configured
 **Date:** 2026-09-07
 **Elapsed:** ~40 min for the inventory
 **Cost:** $0 so far
@@ -81,15 +81,19 @@ Nothing broke. What the inventory found is worse than a breakage.
 
 **Most of the no-remote repos are archive noise.** Five of the nine are duplicate copies of one dead project in an archive folder. Deduplicating before backing up is worth more than backing all of them up.
 
-## Blocked
+## Next
 
-The backup half needs an external drive and none is attached. 388 GB in use means 1 TB minimum to leave room for history.
+389 GB in use, so a destination needs roughly that plus room for history.
 
-Until that drive exists this phase cannot close, and nothing downstream should start.
+The NAS is the obvious first candidate and I hadn't considered it: it's already the archive target in this setup, macOS can use an SMB share as a Time Machine destination, and it needs no purchase. That gets tried before anything gets bought. A dedicated external drive is the fallback if the NAS turns out to be too full, too slow over the network, or unable to advertise the share correctly.
+
+Either way this phase doesn't close until a restore has been tested, and nothing downstream starts before then.
 
 ## What I would do differently
 
 Run `tmutil destinationinfo` first, before any planning. One command, one second, and its answer determines whether the rest is worth doing. I did roughly ten days of architecture work on a machine I hadn't checked was backed up.
+
+Check what you already own before pricing what you don't. My first instinct here was to go shopping for a drive, with a NAS sitting on the same network doing nothing but archiving.
 
 Count things instead of remembering them. Two of the three numbers I was carrying were wrong, and the sweep above takes under a minute.
 

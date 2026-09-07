@@ -4,7 +4,7 @@ One worked example of the setup the [map](../README.md) describes, on hardware I
 
 The map is general — it's about the tools, not about my machines. This part isn't, deliberately. Most published guides in this space run on 4×4090 rigs or vendor-loaned DGX boxes, which is not what most people reading them have. This runs on an 18 GB laptop, a 16 GB Mac mini and a 12 GB GPU, which is closer to ordinary. Where a tool in the map won't run on hardware this size, I say so rather than quietly skipping it.
 
-The other difference: guides are usually written afterwards, by someone who already knows the answer, with the failures cut. Here what breaks stays in.
+Guides are usually written afterwards, by someone who already knows the answer, with the failures cut. Here what breaks stays in.
 
 ## Hardware
 
@@ -16,17 +16,15 @@ The other difference: guides are usually written afterwards, by someone who alre
 | Archive | NAS | — |
 | Burst | Rented cloud GPUs | bounded |
 
-Two things follow from that. 12 GB is the real ceiling here, so anything bigger is a cloud job or doesn't happen. And both Macs are under the 24 GB that Perplexity's Mac product needs, so some tools in the map get documented but not run.
+12 GB is the real ceiling, so anything bigger is a cloud job or doesn't happen. Both Macs are under the 24 GB Perplexity's Mac product needs, so some tools in the map get documented but not run.
 
 ## Entries
 
-- [00 — Protect and inventory](00-protect-and-inventory.md) — inventory done, backup blocked on hardware
+- [00 — Protect and inventory](00-protect-and-inventory.md) — inventory done, backup not yet configured
 
 Planned, in order. Each becomes a file when it has output in it, not before:
 
 01 naming and access · 02 Linux box, driver, containers · 03 local model endpoint · 04 MacBook remote workflow · 05 always-on services and archive · 06a cloud burst, bounded · 06b spend gate
-
-Phase 00 goes first because a lab built on unbacked-up work isn't a lab.
 
 ## Rules
 
