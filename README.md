@@ -1,16 +1,15 @@
 # Local AI compute, September 2026
 
-I spent ten days trying to find a product to build in personal AI compute orchestration. There isn't one. Every layer already has something free sitting in it, usually shipped by the vendor.
+Notes from ten days of looking for a product to build in personal AI compute orchestration. There isn't one — every layer already has something free in it. The notes were more useful than the idea, so here they are.
 
-What I got instead was this: a list of what these tools actually do, and more usefully what they don't, with a date on every row. I'm publishing it because most of the guides I read on the way were repeating things that stopped being true months ago. One of them was mine.
+What each tool does, what it doesn't, dated. Checked 2026-09-03 to 2026-09-05.
 
-No tool here. No install, no CLI, nothing to configure. If you came looking for a control plane for a mixed Mac and NVIDIA setup, the free options below have it covered, and the last real gap closed on 2026-09-03 when NVIDIA shipped a router that includes Macs.
-
-Stars and licenses checked 2026-09-05, feature claims 2026-09-03 to 2026-09-05. [CORRECTIONS.md](CORRECTIONS.md) has seven claims about this space that are wrong; four were mine first. [VERIFY.md](VERIFY.md) has the method, including how much of this was machine-gathered and what that cost me in errors.
+[CORRECTIONS.md](CORRECTIONS.md) — seven things about this space that are wrong. Four were mine.
+[VERIFY.md](VERIFY.md) — how to re-check any of it, how it was gathered, what that cost in errors.
 
 ## Local runtimes
 
-Where the model actually runs. All free; pick on ergonomics.
+All free. Pick on ergonomics.
 
 | Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
@@ -22,7 +21,7 @@ Where the model actually runs. All free; pick on ergonomics.
 
 ## Across machines you own
 
-This is the layer that moved while I was writing about it.
+This layer moved while I was writing about it.
 
 | Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
@@ -42,7 +41,7 @@ This is the layer that moved while I was writing about it.
 
 ## Fit and cost estimation
 
-Crowded and the least trustworthy section on this page. Read [CORRECTIONS.md](CORRECTIONS.md) entry 7 before you believe any of it.
+Least trustworthy section here. [CORRECTIONS.md](CORRECTIONS.md) entry 7 first.
 
 | Tool | Does | Does **not** | Stars | Checked |
 |---|---|---|---|---|
@@ -53,19 +52,18 @@ Crowded and the least trustworthy section on this page. Read [CORRECTIONS.md](CO
 
 ## Stopping an agent from spending your money
 
-This layer exists already, and it isn't a third-party product.
+Already exists. Not a third-party product.
 
-[Claude Code hooks](https://code.claude.com/docs/en/hooks): a `PreToolUse` hook returns `allow`/`deny`/`ask`/`defer` and can match on a command pattern. An `ask` forces a prompt even in auto mode. Nothing in it knows about dollars, so the cost logic is yours to write, roughly 60 lines around `sky launch --dryrun`.
+- [Hooks](https://code.claude.com/docs/en/hooks) — `PreToolUse` returns `allow`/`deny`/`ask`/`defer`, matches on command pattern, and an `ask` prompts even in auto mode. Knows nothing about dollars. The cost logic is yours: ~60 lines around `sky launch --dryrun`.
+- [Permission modes](https://code.claude.com/docs/en/permission-modes) — auto mode default since 2026-08-14; classifier blocked 89% of dangerous commands vs 13.6% for humans over 1,053 cases. Block list covers production deploys, IAM grants, shared infrastructure, protected IaC, force push, destructive git. No spend, billing, budget or purchase criterion anywhere in it.
+- Perplexity Portable Computer — per-step approval before cloud escalation, PII classifier over what leaves. DGX Spark or Linux + RTX ≥24 GB. Hybrid Compute does the same on Apple silicon since 2026-09-01, 24 GB minimum. Subscription.
+- LM Studio Bionic — reviews shell commands before running (1.1.0, 2026-08-27).
 
-[Permission modes](https://code.claude.com/docs/en/permission-modes): auto mode has been the default since 2026-08-14. In a 1,053-case study the classifier blocked 89% of dangerous commands against 13.6% for the humans. Its default block list covers production deploys, IAM grants, "Modifying shared infrastructure", protected IaC scopes, force pushes and destructive git, among others. There is no spend, billing, budget or purchase criterion anywhere in it. Agent-initiated cloud spend is the one thing here that is genuinely still ungated.
-
-Perplexity Portable Computer asks before any step escalates to a cloud model and runs a PII classifier over what leaves. Hybrid Compute does the same on Apple silicon since 2026-09-01, 24 GB minimum. Subscription product; Portable Computer needs a DGX Spark or a Linux box with an RTX 24 GB or better.
-
-LM Studio's Bionic agent reviews shell commands before running them (1.1.0, 2026-08-27).
+Agent-initiated cloud spend is the one thing on this page nothing gates.
 
 ## Hardware
 
-Decode speed tracks memory bandwidth over active bytes per token. Not FLOPS. Not capacity. A small card with fast memory beats a big box with slow memory on anything that fits in both, and this catches people out constantly.
+Decode speed tracks bandwidth over active bytes per token. Not FLOPS, not capacity.
 
 | Machine | Memory | Bandwidth | Price |
 |---|---|---|---|
@@ -74,7 +72,7 @@ Decode speed tracks memory bandwidth over active bytes per token. Not FLOPS. Not
 | DGX Spark | 128 GB unified | 273 GB/s | ~$4,699 (not listed on NVIDIA's spec page; sold via their marketplace) |
 | AMD Strix Halo | 128 GB LPDDR5X | — | ~$2,000–3,500, varies by builder (unverified) |
 
-So the 4070 beats the Spark on decode for anything that fits in 12 GB, despite the Spark having ten times the memory. Buy the Spark for capacity and CUDA compatibility. Don't buy it expecting speed. Capacity and speed are two different purchases and neither one upgrades the other.
+The 4070 out-decodes the Spark on anything that fits in 12 GB, with a tenth of the memory. Buy the Spark for capacity and CUDA, not speed. Capacity and speed are separate purchases.
 
 ## If you own
 
@@ -88,12 +86,12 @@ So the 4070 beats the Spark on decode for anything that fits in 12 GB, despite t
 
 ## Build log
 
-[`build-log/`](build-log/) is me doing this on real hardware: two Macs, a 12 GB CUDA box, a NAS, rented GPUs when something won't fit. One entry per phase, with the output pasted in and the failures left where they happened.
+[`build-log/`](build-log/) — same thing on real hardware. Two Macs, a 12 GB CUDA box, a NAS, rented GPUs when something won't fit. Output pasted in, failures left where they happened.
 
-Empty until I've actually run them. I'd rather it sat empty than filled with things I hadn't done.
+Empty until I've run them.
 
 ## Corrections
 
-Open an issue: the claim, a primary source, the date you checked. Corrections to my own errors are the useful kind and I'll credit them.
+Open an issue: the claim, a primary source, the date you checked. Corrections to my own errors are the useful kind.
 
-Requests to turn this into a tool get declined. That's the whole point of it.
+Requests to turn this into a tool get declined.
