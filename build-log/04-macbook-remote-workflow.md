@@ -1,6 +1,9 @@
 # Phase 04 — MacBook remote workflow
 
-**Status:** not started **Date:** **Elapsed:** **Cost:**
+**Status:** not started
+**Date:**
+**Elapsed:**
+**Cost:**
 
 ## Goal
 

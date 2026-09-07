@@ -1,6 +1,9 @@
 # Phase 06b — Spend gate
 
-**Status:** not started **Date:** **Elapsed:** **Cost:**
+**Status:** not started
+**Date:**
+**Elapsed:**
+**Cost:**
 
 ## Goal
 

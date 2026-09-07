@@ -1,6 +1,9 @@
 # Phase 03 — Local model endpoint
 
-**Status:** not started **Date:** **Elapsed:** **Cost:**
+**Status:** not started
+**Date:**
+**Elapsed:**
+**Cost:**
 
 ## Goal
 

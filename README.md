@@ -88,7 +88,7 @@ The 4070 out-decodes the Spark on anything that fits in 12 GB, with a tenth of t
 
 [`build-log/`](build-log/) — same thing on real hardware. Two Macs, a 12 GB CUDA box, a NAS, rented GPUs when something won't fit. Output pasted in, failures left where they happened.
 
-Empty until I've run them.
+Phase 00 is up: no Time Machine destination configured at all, and 28 repos with uncommitted work against 7 with unpushed commits. The rest go up as I run them.
 
 ## Corrections
 

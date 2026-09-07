@@ -20,7 +20,7 @@ Two things follow from that. 12 GB is the real ceiling here, so anything bigger 
 
 | # | Phase | Status |
 |---|---|---|
-| 00 | [Protect and inventory](00-protect-and-inventory.md) | not started |
+| 00 | [Protect and inventory](00-protect-and-inventory.md) | inventory done, backup blocked on hardware |
 | 01 | [Naming and access](01-naming-and-access.md) | not started |
 | 02 | [Linux box, driver, containers](02-linux-box-driver-containers.md) | not started |
 | 03 | [Local model endpoint](03-local-model-endpoint.md) | not started |

@@ -1,6 +1,9 @@
 # Phase 06a — Cloud burst, bounded
 
-**Status:** not started **Date:** **Elapsed:** **Cost:**
+**Status:** not started
+**Date:**
+**Elapsed:**
+**Cost:**
 
 ## Goal
 
