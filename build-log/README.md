@@ -12,11 +12,13 @@ Guides are usually written afterwards, by someone who already knows the answer, 
 |---|---|---|
 | Development console | MacBook Pro M3 Pro | 18 GB unified |
 | Always-on | Mac mini M4 | 16 GB unified |
-| Local model endpoint | Linux workstation | RTX 4070, 12 GB VRAM, 64 GB RAM |
+| Local model endpoint (planned) | Self-built desktop, currently Windows | RTX 4070, 12 GB VRAM, 64 GB RAM |
 | Archive | NAS | — |
 | Burst | Rented cloud GPUs | bounded |
 
 12 GB is the real ceiling, so anything bigger is a cloud job or doesn't happen. Both Macs are under the 24 GB Perplexity's Mac product needs, so some tools in the map get documented but not run.
+
+The desktop is a gaming PC running Windows, not a Linux box yet. Converting it — wiping Windows, dual-booting it onto its own SSD, and putting Ubuntu on the big one — is phase 02, and it hasn't happened. That starting point is probably more common than the one most guides assume: if you own a 4070, it's likely running Windows right now.
 
 ## Entries
 
