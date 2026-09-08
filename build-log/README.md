@@ -16,7 +16,7 @@ Guides are usually written afterwards, by someone who already knows the answer, 
 | Archive | NAS | — |
 | Burst | Rented cloud GPUs | bounded |
 
-12 GB is the real ceiling, so anything bigger is a cloud job or doesn't happen. Both Macs are under the 24 GB Perplexity's Mac product needs, so some tools in the map get documented but not run.
+12 GB is the real ceiling for dense models, so a bigger dense model is a cloud job or doesn't happen. MoE models are the exception: with 64 GB of RAM behind the card, a 30B-A3B model that doesn't fit VRAM generated at the same speed as a 12B that does — measured in [03](03-local-model-endpoint.md). Both Macs are under the 24 GB Perplexity's Mac product needs, so some tools in the map get documented but not run.
 
 The desktop was a gaming PC running Windows until 2026-09-07. Converting it is phase 02: Windows wiped, single-boot Ubuntu, not the dual boot an earlier plan called for — dual boot takes the model endpoint down whenever the machine is in Windows. That starting point is probably more common than the one most guides assume: if you own a 4070, it's likely running Windows right now.
 
@@ -24,10 +24,11 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 
 - [00 — Protect and inventory](00-protect-and-inventory.md) — inventory done, backup not yet configured
 - [02 — Linux box, driver, containers](02-linux-box-driver-containers.md) — done; SSH and rescue boot deferred. Ran before 00 closed, against the rules below; the entry says so
+- [03 — Local model endpoint](03-local-model-endpoint.md) — done; Ollama in Docker, four models measured, loopback only. MoE spill result inside
 
 Planned, in order. Each becomes a file when it has output in it, not before:
 
-01 naming and access · 03 local model endpoint · 04 MacBook remote workflow · 05 always-on services and archive · 06a cloud burst, bounded · 06b spend gate
+01 naming and access · 04 MacBook remote workflow · 05 always-on services and archive · 06a cloud burst, bounded · 06b spend gate
 
 ## Rules
 
