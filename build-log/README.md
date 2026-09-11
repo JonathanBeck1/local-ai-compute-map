@@ -2,7 +2,7 @@
 
 One worked example of the setup the [map](../README.md) describes, on hardware I actually own, written as it happens.
 
-The map is general — it's about the tools, not about my machines. This part isn't, deliberately. Most published guides in this space run on 4×4090 rigs or vendor-loaned DGX boxes, which is not what most people reading them have. This runs on an 18 GB laptop, a 16 GB Mac mini and a 12 GB GPU, which is closer to ordinary. Where a tool in the map won't run on hardware this size, I say so rather than quietly skipping it.
+The map is general — it's about the tools, not about my machines. This part isn't, deliberately. Most published guides in this space run on 4×4090 rigs or vendor-loaned DGX boxes, which is not what most people reading them have. This runs on a 12 GB GPU in a desktop, an 18 GB laptop and a 16 GB Mac mini, which is closer to ordinary. Where a tool in the map won't run on hardware this size, I say so rather than quietly skipping it.
 
 Guides are usually written afterwards, by someone who already knows the answer, with the failures cut. Here what breaks stays in.
 
@@ -10,11 +10,13 @@ Guides are usually written afterwards, by someone who already knows the answer, 
 
 | Role | Machine | Spec that matters |
 |---|---|---|
-| Development console | MacBook Pro M3 Pro | 18 GB unified |
-| Always-on | Mac mini M4 | 16 GB unified |
-| Local model endpoint | Self-built desktop, Ubuntu 24.04 | RTX 4070, 12 GB VRAM, 64 GB RAM, 1 TB bulk disk for models and images |
+| Main station **and** local model endpoint | Self-built desktop, Ubuntu 24.04 | RTX 4070, 12 GB VRAM, 64 GB RAM, three monitors, 1 TB bulk disk for models and images |
+| Mobile client | MacBook Pro M3 Pro | 18 GB unified, one screen |
+| Always-on small services | Mac mini M4 | 16 GB unified |
 | Archive | NAS | — |
 | Burst | Rented cloud GPUs | bounded |
+
+**Corrected 2026-09-11.** Earlier revisions had the laptop as the development console and the desktop as a server it talked to. That was backwards. The desktop has the screens, the memory, the GPU and the tooling; the laptop has one screen. So the desktop is where the work happens and the laptop is what reaches back into it when I'm away. Two consequences the log has to live with: the work now sits on a disk with no backup yet, and the GPU is shared between the desk and the endpoint — a game running at the desk takes VRAM from the model. It is one person's workstation that also serves models, not a dedicated server, and it gets described as such.
 
 12 GB is the real ceiling for dense models, so a bigger dense model is a cloud job or doesn't happen. MoE models are the exception: with 64 GB of RAM behind the card, a 30B-A3B model that doesn't fit VRAM generated at the same speed as a 12B that does — measured in [03](03-local-model-endpoint.md). Both Macs are under the 24 GB Perplexity's Mac product needs, so some tools in the map get documented but not run.
 
@@ -26,9 +28,13 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 - [02 — Linux box, driver, containers](02-linux-box-driver-containers.md) — done; SSH and rescue boot deferred. Ran before 00 closed, against the rules below; the entry says so
 - [03 — Local model endpoint](03-local-model-endpoint.md) — done; Ollama in Docker, four models measured, loopback only. MoE spill result inside
 
-Planned, in order. Each becomes a file when it has output in it, not before:
+Planned. Each becomes a file when it has output in it, not before. Order changed 2026-09-11 with the roles above:
 
-01 naming and access · 04 MacBook remote workflow · 05 always-on services and archive · 06a cloud burst, bounded · 06b spend gate
+00b desktop backup — the work lives there now and nothing copies it; the NAS is the target · 05 always-on services and archive · 06a cloud burst, bounded · 06b spend gate
+
+Deferred, with the reason: **01 naming and access** (Tailscale, keys-only SSH, endpoint on the mesh) is written and reviewed but not run. The LAN is being rebuilt on Ubiquiti gear and no remote-access service goes on any machine until that is done. **04 laptop remote workflow** collapses into 01's acceptance checks once 01 happens — it's "reach the desktop from the laptop," nothing more.
+
+Still open from earlier entries: the laptop's own backup (00), the desktop's rescue-boot test (02, A2.7), and whether the laptop's 50 repos move to the desktop or get backed up where they are.
 
 ## Rules
 
