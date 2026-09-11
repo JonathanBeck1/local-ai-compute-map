@@ -12,21 +12,22 @@ Guides are usually written afterwards, by someone who already knows the answer, 
 |---|---|---|
 | Development console | MacBook Pro M3 Pro | 18 GB unified |
 | Always-on | Mac mini M4 | 16 GB unified |
-| Local model endpoint (planned) | Self-built desktop, currently Windows | RTX 4070, 12 GB VRAM, 64 GB RAM |
+| Local model endpoint | Self-built desktop, Ubuntu 24.04 | RTX 4070, 12 GB VRAM, 64 GB RAM, 1 TB bulk disk for models and images |
 | Archive | NAS | — |
 | Burst | Rented cloud GPUs | bounded |
 
 12 GB is the real ceiling, so anything bigger is a cloud job or doesn't happen. Both Macs are under the 24 GB Perplexity's Mac product needs, so some tools in the map get documented but not run.
 
-The desktop is a gaming PC running Windows, not a Linux box yet. Converting it — wiping Windows, dual-booting it onto its own SSD, and putting Ubuntu on the big one — is phase 02, and it hasn't happened. That starting point is probably more common than the one most guides assume: if you own a 4070, it's likely running Windows right now.
+The desktop was a gaming PC running Windows until 2026-09-07. Converting it is phase 02: Windows wiped, single-boot Ubuntu, not the dual boot an earlier plan called for — dual boot takes the model endpoint down whenever the machine is in Windows. That starting point is probably more common than the one most guides assume: if you own a 4070, it's likely running Windows right now.
 
 ## Entries
 
 - [00 — Protect and inventory](00-protect-and-inventory.md) — inventory done, backup not yet configured
+- [02 — Linux box, driver, containers](02-linux-box-driver-containers.md) — done; SSH and rescue boot deferred. Ran before 00 closed, against the rules below; the entry says so
 
 Planned, in order. Each becomes a file when it has output in it, not before:
 
-01 naming and access · 02 Linux box, driver, containers · 03 local model endpoint · 04 MacBook remote workflow · 05 always-on services and archive · 06a cloud burst, bounded · 06b spend gate
+01 naming and access · 03 local model endpoint · 04 MacBook remote workflow · 05 always-on services and archive · 06a cloud burst, bounded · 06b spend gate
 
 ## Rules
 
