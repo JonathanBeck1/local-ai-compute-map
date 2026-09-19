@@ -84,7 +84,7 @@ The 4070 out-decodes the Spark on anything that fits in 12 GB, with a tenth of t
 
 [`build-log/`](build-log/) — one worked example of the above, on ordinary hardware: an 18 GB laptop, a 16 GB Mac mini, a 12 GB GPU. Not a 4x4090 rig. Output pasted in, failures left where they happened.
 
-Phase 00 is up: no Time Machine destination configured at all, and 28 repos with uncommitted work against 7 with unpushed commits. Phase 02 is up: the gaming PC is now an Ubuntu CUDA node, and Docker 29 put the first image on the wrong disk while its own check said otherwise. The rest go up as I run them.
+Phase 00 is up: no Time Machine destination configured at all, and 28 repos with uncommitted work against 7 with unpushed commits. Phase 02 is up: the gaming PC is now an Ubuntu CUDA node, and Docker 29 put the first image on the wrong disk while its own check said otherwise. Phase 03 is up: Ollama on that box, four models with measured tok/s, and a 30B MoE that doesn't fit the 12 GB card running as fast as a 12B that does. Phase 03b is up: Claude Code on that local 30B coder versus the paid model, same task — eleven times slower, tests green, two columns wrong. The rest go up as I run them.
 
 ## Corrections
 
