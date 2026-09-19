@@ -1,8 +1,8 @@
 # Phase 02b — The distro I never chose, and the pin that would have broken
 
-**Status:** done
-**Date:** 2026-09-18
-**Elapsed:** ~2 h, mostly verification
+**Status:** repair applied; it caused a one-hour outage and left one monitor unusable at the login screen — fix pending
+**Date:** 2026-09-18 to 2026-09-19
+**Elapsed:** ~2 h verification, then ~1 h outage recovery
 **Cost:** $0
 
 ## Goal
@@ -112,6 +112,24 @@ Fixed by reading `/proc/modules`, which is what `lsmod` reads anyway.
 
 **6. The rehearsal required root, so nobody would have run it.** `--dry-run` was gated behind `id -u -eq 0` along with everything else, despite touching nothing privileged. A dry run you need sudo for is a dry run people skip.
 
+**7. The repair took the login screen down for an hour.** It ran cleanly — 30-second apt transaction, dpkg healthy, every kernel with its module, driver 595.84 → 595.91.07, no holds. Then every normal boot reached a grey screen and never offered a login. Nine failed boots and about an hour at the physical keyboard in recovery mode before the machine came back.
+
+The package side was clean on every one of them: right kernel, NVIDIA module loaded with zero errors, X up with the correct `NVIDIA GLX Module 595.91.07`, and the login-screen process logging *identically* to the boot that eventually worked. The difference wasn't in any log line. It was the monitors:
+
+| Boots | Driver | Monitors | Reached login? |
+|---|---|---|---|
+| 4 before the repair | 595.84 | 1440p LG + 4K Samsung | 4 of 4 |
+| 8 after | **595.91.07** | 1440p LG + 4K Samsung | **0 of 8** |
+| the one that worked | 595.91.07 | 1440p LG only | yes |
+
+**A point release inside the same driver branch broke the login screen with a specific 4K DisplayPort monitor attached.** Nothing done in recovery fixed it — no package activity at all, and regenerating GRUB was followed by two more grey boots. The 4K monitor dropping off fixed it. The machine currently runs on one monitor, which is why it works.
+
+**Every check this repair went through was real, passed, and tested the wrong thing.** The adversarial review verified dependency ordering, apt semantics, GRUB, rollback mechanics and shell correctness; it found a genuine blocker and thirteen other real defects. The dry run ran the real resolver and correctly reported 27 installs and 0 removals. None of that can see whether a new driver lights up a monitor at a login screen, and nothing claimed it could. The assumption underneath all of it — *a point release is low-risk* — was never tested, in exactly the way *the package name pins the branch* hadn't been an hour earlier.
+
+On top of that, the script offered an immediate reboot on the owner's only workstation before anyone had confirmed a way back. There was one: every 595.84 package, including the matching kernel module, turned out to be cached offline. That was established after the outage.
+
+**And the safety net worked.** One of the recovery boots ran `6.8.0-139-generic` — the fallback kernel this repair installed, chosen from the boot menu this repair made reachable. Before the repair there was one kernel and no menu. The repair caused the outage, and its own safety net was one of the ways through it. Both are in the record because both happened.
+
 Findings 3 and 4 were caught by adversarial review before the script was run — five independent lenses over it (boot safety, apt semantics, GRUB, rollback, shell correctness), every finding then handed to a separate agent told to refute it. 14 findings survived refutation; three were this blocker approached from different angles.
 
 **5. A fact in the record was an inference.** The hardware record said the driver was "installed automatically by the Ubuntu installer's third-party-drivers option". What the apt log actually shows is `apt-get install -y nvidia-driver-595-open linux-modules-nvidia-595-open-generic-hwe-24.04` at 21:14:56 on install day — consistent with the installer checkbox, with `ubuntu-drivers autoinstall`, or with the Software & Updates GUI. I wrote down the inference as a fact. Now recorded as unknown.
@@ -132,9 +150,12 @@ Findings 3 and 4 were caught by adversarial review before the script was run —
 |---|---|---|
 | A2b.1 | The distro choice is examined against alternatives on primary sources | pass — Debian 13 and Fedora 44, with dates and URLs |
 | A2b.2 | The choice is ratified or reversed, with the costs recorded either way | pass — ratified; four costs recorded, not glossed |
-| A2b.3 | Every installed kernel has a matching NVIDIA module | *pending the repair* |
-| A2b.4 | A second bootable kernel exists and the boot menu can reach it | *pending the repair* |
-| A2b.5 | No NVIDIA package is kept back | *pending the repair* |
-| A2b.6 | GPU survives a reboot after the repair, verified in a container | *pending the repair* |
+| A2b.3 | Every installed kernel has a matching NVIDIA module | pass — `6.8.0-139-generic` and `7.0.0-31-generic`, both `installed` |
+| A2b.4 | A second bootable kernel exists and the boot menu can reach it | pass — **proven in use**: the owner booted `6.8.0-139-generic` from the menu during the outage |
+| A2b.5 | No NVIDIA package is kept back | pass — none kept back, no holds |
+| A2b.6 | GPU survives a reboot after the repair, verified in a container | pass — `NVIDIA GeForce RTX 4070, 595.91.07` from `nvidia/cuda` |
+| A2b.7 | The desktop reaches the login screen after a reboot **with every monitor connected** | **fail** — 0 of 8 boots with the 4K Samsung attached. Added after the outage; it is the check that should have existed before it |
+
+A2b.7 is open. The next step separates two explanations with a hot-plug test that needs no reboot: either the login screen puts its prompt on a monitor that isn't lit (fixable with a login-screen monitor config, keeping 595.91.07), or the new driver can't drive that monitor at all (needs a rollback to 595.84 — viable and cached offline, but only a stopgap, since unattended upgrades will move it straight back up).
 
 A2.4 from phase 02 is **retired**. "The driver is held" was the wrong check. It is replaced by A2b.3 and A2b.5, which ask whether the GPU will survive the next kernel rather than whether a command was typed.
