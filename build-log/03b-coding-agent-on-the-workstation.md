@@ -89,7 +89,81 @@ At 64k context the MoE's split moved from 45/55 to 57% CPU / 43% GPU; the KV cac
 
 **3. Claude Code prices a free model.** `total_cost_usd: 1.097` in the local run's JSON. It's the estimate for an unrecognised model name at some default rate. Actual cost, zero. Anyone summing costs out of these result files would be wrong.
 
-**4. Found eight days later: the local agent wrote outside its directory.** An [inventory of the workstation](00b-desktop-backup.md) turned up a stray `test_ollama_models.py` in the home directory, timestamped inside the local run's window (14:03 to 14:12) and before the control run. It matches neither run's final test file, so it's an early draft that qwen3-coder wrote to the wrong path before writing the real one in the folder it had been given. The run was allowed `Write` with no path restriction, and it used that outside its directory. It was harmless here. It's also exactly what makes an unattended local agent risky, and the verification above missed it because it only looked inside the working directory. **Check where an agent wrote, not only what it wrote where you expected.**
+**4. Found eight days later: the local agent wrote outside its directory.** An [inventory of the workstation](00b-desktop-backup.md) turned up stray files in the home directory, timestamped inside the local run's window (14:03 to 14:12) and before the control run. There were two: `test_ollama_models.py` and `ollama_models.py`, written at 14:04 and 14:05. The inventory first reported only one, for reasons covered in 00b. Neither matches the run's final files, so they're early drafts that qwen3-coder wrote to the wrong path before writing the real ones in the folder it had been given. The run was allowed `Write` with no path restriction, and it used that outside its directory. It was harmless here. It's also exactly what makes an unattended local agent risky, and the verification above missed it because it only looked inside the working directory. **Check where an agent wrote, not only what it wrote where you expected.**
+
+## Rematch, 2026-09-19: allowed to check, it didn't
+
+The obvious objection to the result above is that the local model had no way to check the API, so its guess was unavoidable. The fix was one permission: let it `curl` the real endpoint. I added `Bash(curl:*)` to its allowed tools, and changed nothing else: same task, same model, a fresh folder. I **didn't tell it to look**, because the question was whether it would choose to. Every action was recorded, and a timestamp marker was set so that writes *anywhere* in the home directory could be found afterwards, not just in its folder.
+
+```
+                              first run        rematch
+allowed to curl the API       no               yes
+curl calls made               -                0 of 29 actions
+wall time                     580 s            1,344 s
+commands rejected             -                9  (python, mv, cd && ... -- not on its list)
+files in its project folder   4                0
+files written to ~ instead    2                6, plus __pycache__ and .pytest_cache
+PARAMS / QUANT columns        empty            empty -- the identical model.get('parameters') guess
+its tests, re-run by me       3 passed         3 passed / 3 passed / 1 failed
+its own verdict               "successfully"   "successfully"
+```
+
+**It never looked.** It made the identical wrong guess, wrote tests that encode the guess, and reported success. Giving it the means to check changed nothing, because it doesn't check. **The limit is behaviour, not access.**
+
+**It wrote everything in the wrong place, and that wasn't my launch.** Having blamed the wrong cause for an outage elsewhere in this log, I checked. The recording's first event shows Claude Code started in exactly the right folder. The model's *first* file path, before it had read anything, was in the home directory. The Opus control kept all its files in its own folder.
+
+**It overwrote a file it hadn't created.** One of the stray drafts from the first run was still sitting in the home directory. Claude Code's read-before-write guard blocked the first two attempts to write it, then allowed the third, because the model had read the file in between. **That guard asks "did you read it?", not "is it yours?"** It doesn't stop an agent that reads first.
+
+### Making it a one-command tool anyway
+
+The mechanics work fine. `claude-local` is a small shell function that points Claude Code at the local endpoint for that one command, so plain `claude` is unaffected:
+
+```bash
+claude-local() {
+    local url="${CLAUDE_LOCAL_URL:-http://127.0.0.1:11434}"
+    local model="${CLAUDE_LOCAL_MODEL:-laguna-xs-2.1}"   # see the bake-off below
+    if ! curl -fsS -m 3 "$url/api/version" >/dev/null 2>&1; then
+        echo "claude-local: no Ollama endpoint answering at $url" >&2; return 1
+    fi
+    local mode=()
+    case " $* " in
+        *" --permission-mode "*) ;;
+        *) mode=(--permission-mode "${CLAUDE_LOCAL_MODE:-manual}") ;;
+    esac
+    ANTHROPIC_BASE_URL="$url" ANTHROPIC_AUTH_TOKEN=ollama ANTHROPIC_API_KEY="" \
+        command claude --model "$model" "${mode[@]}" "$@"
+}
+```
+
+Startup is better than the first number suggested. Claude Code sends the model about 18,000 tokens of instructions. The first run after the model had unloaded took **116 s**, the next **15.6 s**, and the next **0.3 s**. Ollama served 18,016 of those 18,017 tokens from its prompt cache and even reported it in the same `cache_read_input_tokens` field the paid API uses. The model stays warm for 30 minutes.
+
+Because of the rematch, `claude-local` **always starts in the mode that asks before every file write and command**, unless you deliberately choose otherwise. A path in the home directory then shows up as a question, not something already done. It's usable for drafts you approve step by step. It isn't usable headless with writes pre-approved, or in accept-edits or auto mode.
+
+## Bake-off, 2026-09-19: four local agentic coders, one exam
+
+One model failing twice doesn't prove local models can't do this. Since the first trial, three newer models marketed specifically for agentic coding have appeared. They're all the same size class as qwen3-coder: a 30B mixture-of-experts with ~3B active, so they run on this machine the same way, by spilling into RAM. I put all four through the rematch exam, with qwen3-coder rerun under identical clean conditions. In its rematch, a leftover file of its own had been sitting in the home directory, which wasn't a fair start.
+
+The harness, [`scripts/agent-bakeoff.py`](scripts/agent-bakeoff.py), refuses to start if a previous contestant's files are still around. It unloads every model and warms only the contestant, so load time isn't scored. Every model gets the same task, tools, turn limit and permission mode, one at a time. **It grades by running each tool against the live endpoint** and looking for the real values (`Q4_K_M`, `30.5B`). That's exactly where qwen3-coder failed twice while its own tests passed.
+
+Before trusting it, **I tested the grader on two answers whose correctness was already known.** The Opus control from the first trial passed every check. The qwen rematch failed on correctness while its tests showed "5 passed". Then, because the grader failed all four contestants, I read every contestant's actual output by hand. It was right each time, but the four failed for different reasons:
+
+```
+                          qwen3-coder:30b   laguna-xs-2.1   north-mini-code-1.0   nemotron-3.5-lightning
+size / share on GPU       18 GB / 43%       20 GB / 39%     18 GB / 47%           25 GB / 35%
+tool works vs live API    no - crashes      no - 'unknown'  no - all 5 crash      no - columns blank
+looked at the API (curl)  0                 0               0                     0
+used required filename    yes               yes             no  (11 files)        no  (ollama_query.py)
+stayed in project folder  NO - 4 files ~    yes             yes                   yes
+finished in < 40 turns    yes (17)          no              no                    no
+tool calls / rejected     16 / 6            117 / 23        80 / 9                60 / 25
+wall time                 421 s             891 s           1,486 s               1,097 s
+```
+
+**None of the four produced a working tool, and none of the four checked the API: 0 of 273 actions.** Each made the same assumption about where Ollama puts parameter size and quantization (top level, rather than under `details`), got it wrong, and never ran the one `curl` that would have shown it. Opus got it right in 52 seconds. The marketing copy describes all three newer models as built for agentic engineering. On this exam, "agentic" meant using lots of tools, not using the one that mattered.
+
+Two things came out better. The newer models **kept to their project folders**; qwen3-coder has now scattered files into the home directory on all three of its runs. And laguna came closest: its tool runs, its tests pass, and only those two fields are wrong.
+
+**No local model tested here is a trustworthy coding agent.** `claude-local` now defaults to laguna, because it stays in its folder, and it still asks before every write.
 
 ## What I would do differently
 
