@@ -26,6 +26,7 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 
 - [00 — Protect and inventory](00-protect-and-inventory.md) — inventory done, backup not yet configured
 - [02 — Linux box, driver, containers](02-linux-box-driver-containers.md) — done; SSH and rescue boot deferred. Ran before 00 closed, against the rules below; the entry says so
+- [02b — The distro I never chose, and the pin that would have broken](02b-distro-choice-and-a-broken-pin.md) — Ubuntu examined against Debian 13 and Fedora 44 after the fact and ratified; an acceptance test that passed on a configuration which would have lost the GPU; and an outage I blamed on the repair that turned out to be a monitor on a PS5 input
 - [03 — Local model endpoint](03-local-model-endpoint.md) — done; Ollama in Docker, four models measured, loopback only. MoE spill result inside
 - [03b — Coding agent on the workstation](03b-coding-agent-on-the-workstation.md) — done; llmfit checked against measurements, Claude Code on a local 30B coder versus the paid model. Green tests, wrong output
 
