@@ -1,6 +1,6 @@
 # Phase 00b — What on the workstation exists nowhere else
 
-**Status:** part 1 done: the irreplaceable set is backed up and a restore is tested. Part 2, the NAS, is deferred and has turned out to be a convenience rather than the backup.
+**Status:** part 1 done: the irreplaceable set is backed up daily and a restore is tested. Part 2, the NAS, is deferred and has turned out to be a convenience rather than the backup.
 **Date:** 2026-09-19
 **Elapsed:** ~40 min
 **Cost:** $0
@@ -70,7 +70,11 @@ The general lesson for anyone backing up agent sessions: **the transcript contai
 
 **Count before buying.** This is phase 00's lesson again. Two weeks ago I'd assumed the desktop backup meant "connect the NAS." Counting showed 45 MB that matters and 100 GB that doesn't.
 
-**Schedule it, or it's stale.** The restore test found the backup already out of date three minutes after it ran. It isn't scheduled yet, because a daily job would push session transcripts to GitHub every day unattended, and that's a decision for the person whose sessions they are.
+**Schedule it, or it's stale.** The restore test found the backup already out of date three minutes after it ran. That settled the question of scheduling it. Scheduling was still asked rather than assumed, because a daily job pushes session transcripts to GitHub unattended, and that's a decision for the person whose sessions they are. The answer was yes.
+
+It runs as a systemd *user* timer, so no root is needed. It runs daily at 23:00, and `Persistent=true` means a run missed while the machine was off fires at the next login. It runs at low CPU and I/O priority, so it can't disturb a game or a model. An `OnFailure=` unit raises a desktop notification if the credential scan refuses or the push fails, so a broken backup can't fail silently for weeks.
+
+It was verified the way it will actually run, not from a terminal. The real service, started under systemd, made its own push, which proves the GitHub login held in the desktop keyring is reachable from a scheduled job. That's the part most likely to break silently. The alarm was proven by a deliberately failing job wired to the same `OnFailure=`, and the notification fired.
 
 ## Acceptance check
 
@@ -80,6 +84,6 @@ The general lesson for anyone backing up agent sessions: **the transcript contai
 | A0b.2 | The irreplaceable set is off the machine | pass: private repo, verified from the remote |
 | A0b.3 | Nothing credential-shaped leaves the machine | pass: scan clean, refusal proven with a planted token |
 | A0b.4 | A restore has been tested | pass: fresh clone, 79/80 byte-identical, the one difference explained, the restored gate runs |
-| A0b.5 | The backup stays current | **not met**: manual; was stale within three minutes |
+| A0b.5 | The backup stays current | pass: daily systemd user timer, proven to push from inside systemd; failures notify |
 
 Part 2, the NAS, waits for the network rebuild and is now about saving a 100 GB re-download.
