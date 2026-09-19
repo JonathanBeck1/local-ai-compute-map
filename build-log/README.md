@@ -18,7 +18,7 @@ Guides are usually written afterwards, by someone who already knows the answer, 
 
 **Corrected 2026-09-11.** Earlier revisions had the laptop as the development console and the desktop as a server it talked to. That was backwards. The desktop has the screens, the memory, the GPU and the tooling; the laptop has one screen. So the desktop is where the work happens and the laptop is what reaches back into it when I'm away. Two consequences the log has to live with: the work now sits on a disk with no backup yet, and the GPU is shared between the desk and the endpoint — a game running at the desk takes VRAM from the model. It is one person's workstation that also serves models, not a dedicated server, and it gets described as such.
 
-12 GB is the real ceiling for dense models, so a bigger dense model is a cloud job or doesn't happen. MoE models are the exception: with 64 GB of RAM behind the card, a 30B-A3B model that doesn't fit VRAM generated at the same speed as a 12B that does — measured in [03](03-local-model-endpoint.md). Both Macs are under the 24 GB Perplexity's Mac product needs, so some tools in the map get documented but not run.
+12 GB is the real ceiling for dense models, so a bigger dense model is a cloud job or doesn't happen. MoE models are the exception, up to a point: with 64 GB of RAM behind the card, a 30B-A3B model that doesn't fit VRAM generated at the same speed as a 12B that does — measured in [03](03-local-model-endpoint.md), **at 4k context**. At the 64k context this machine actually runs, the KV cache takes the VRAM the weights were using and the same MoE is 31% *slower* than the 12B; re-measured in [07](07-maintenance-pass.md). Both Macs are under the 24 GB Perplexity's Mac product needs, so some tools in the map get documented but not run.
 
 The desktop was a gaming PC running Windows until 2026-09-07. Converting it is phase 02: Windows wiped, single-boot Ubuntu, not the dual boot an earlier plan called for — dual boot takes the model endpoint down whenever the machine is in Windows. That starting point is probably more common than the one most guides assume: if you own a 4070, it's likely running Windows right now.
 
@@ -32,6 +32,7 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 - [03b — Coding agent on the workstation](03b-coding-agent-on-the-workstation.md) — done; llmfit checked against measurements, Claude Code on a local 30B coder versus the paid model. Green tests, wrong output
 - [03c — Explicit MoE placement, measured against the automatic one](03c-moe-placement-measured.md) — llama.cpp hand-placed expert tensors vs Ollama's automatic split on the same GGUF blob. The 10% win was a VRAM budget, not an algorithm
 - [06b — A spend gate, built before there was anything to spend](06b-spend-gate.md) — a Claude Code hook that stops an agent launching paid cloud compute; at a $0 cap it blocked Claude itself, live. 0 false positives across 207 real commands
+- [07 — A maintenance pass, and a headline that stopped being true](07-maintenance-pass.md) — Ollama upgraded and re-benchmarked; the phase 03 MoE result re-measured at the context this machine actually runs, where it inverts; two acceptance checks that failed on a correct machine
 
 Planned. Each becomes a file when it has output in it, not before. Order changed 2026-09-11 with the roles above:
 

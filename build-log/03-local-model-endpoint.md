@@ -90,6 +90,8 @@ Sanity check against the map's bandwidth rule for gemma4: 504 GB/s ÷ 7.6 GB ≈
 
 So the working rule for a 12 GB card with a lot of RAM behind it: dense models up to ~8 GB in VRAM, *or* MoE models up to what RAM holds, at about the same generation speed. The map's "12 GB is the real ceiling" is a dense-model ceiling. The build-log README now says so.
 
+> **Corrected 2026-09-19 in [07](07-maintenance-pass.md).** Everything above is a fact about a **4k** operating point, the default in force when it was measured. [03c](03c-moe-placement-measured.md) later set the endpoint to 64k, where the KV cache takes ~6.8 GB of the 12 GB card, only 43% of the MoE stays in VRAM, and it generates at **38.2 tok/s — 31% slower** than `gemma4:12b`, not equal to it. The dense models are flat across context because their weights never leave VRAM. The rule above needs "at short context" attached to it, and nobody re-measured when the configuration changed.
+
 After a reboot, nobody logged in:
 
 ```
@@ -143,6 +145,6 @@ Warm the disk cache before timing a cold load, or say which one you measured. ge
 | A3.4 | container, models and GPU back after a reboot, unattended | pass |
 | A3.5 | models on the bulk disk, root unchanged | pass |
 | A3.6 | measured tok/s per model, method stated | pass |
-| A3.7 | MoE spill experiment | measured — 53.6 tok/s at 45/55 |
+| A3.7 | MoE spill experiment | measured — 53.6 tok/s at 45/55, **at 4k context**; 38.2 at the 64k this endpoint now runs ([07](07-maintenance-pass.md)) |
 
 Phase closed. The local endpoint exists and is fast enough to use. It is reachable from one chair.

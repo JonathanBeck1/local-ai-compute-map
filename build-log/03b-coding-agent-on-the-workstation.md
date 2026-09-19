@@ -81,6 +81,8 @@ The local model's finishing message: *"All tests pass successfully (3/3 tests pa
 
 At 64k context the MoE's split moved from 45/55 to 57% CPU / 43% GPU; the KV cache took the VRAM. The two dense models are unaffected at 64k (re-measured 54.8 and 75.6 tok/s, still 100% GPU).
 
+**What this line failed to do is say what the moved split cost.** It recorded that the MoE lost VRAM at 64k and stopped there. The answer, measured in [07](07-maintenance-pass.md), is 53.6 → 38.2 tok/s, which inverts the phase 03 headline: at 64k the 30B MoE is slower than the 12B dense model, not equal to it. The number was one command away and the entry noted the cause without checking the effect.
+
 ## What broke
 
 **1. Green tests, wrong output.** The local agent's PARAMS and QUANT columns are empty for every model. It read `tag.get('parameters')` and `tag.get('quantization')`; Ollama returns them as `details.parameter_size` and `details.quantization_level`. It never saw a real response, guessed the shape, wrote the mock to match the guess, and the tests passed against the mock. Its tests are evidence the code matches its belief, not the API. Only running the tool against the live endpoint caught it — which is why that step is in the verification and not optional. The control got `details.*` right without looking either; it knew the API. Also, the local "GB" is GiB.
