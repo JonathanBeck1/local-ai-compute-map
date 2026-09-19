@@ -108,7 +108,63 @@ The 64k default stays. The trade is 8× the context for a third of the
 throughput, and the agent workloads this endpoint exists for need the context:
 neither Claude Code nor the `claude-local` wrapper sets `num_ctx` per request, so
 lowering the default would quietly truncate them instead of speeding them up.
-What changes is the documentation, not the setting.
+What changes is the documentation, not the context setting — and then the
+follow-up below buys back about half the loss without touching it.
+
+## Follow-up: buying most of it back with an 8-bit KV cache
+
+Accepting a 33% throughput cost to keep 64k raises an obvious question, since
+the cost *is* the KV cache: store the cache quantized and the space goes back to
+the weights. Ollama does this with `OLLAMA_FLASH_ATTENTION=1` and
+`OLLAMA_KV_CACHE_TYPE=q8_0`, two lines in the compose file.
+
+```
+                          fp16 KV        q8_0 KV
+generation @ 64k          38.2 tok/s     45.1 tok/s     +18%
+prompt processing @ 60k      600 tok/s      678 tok/s     +13%
+KV cache @ 64k             ~6.8 GB        ~3.8 GB
+model resident in VRAM         43%            49%
+loaded size                25.4 GB        22.4 GB
+```
+
+**Speed is the easy half.** Quantizing the KV cache is exactly the change that
+can damage recall over long context, which is the entire reason this endpoint
+runs at 64k — so the thing at risk gets tested, not assumed. A unique access
+code is buried at five depths in a ~32k-token document and five in a ~60k one,
+asked for, and matched exactly. Fresh random code per run, so a hit cannot come
+from a cached response; varied filler prose, because repeated text makes
+retrieval unrealistically easy. Same seed for both configurations, so both see
+byte-identical prompts. Script:
+[`scripts/kv-recall-test.py`](scripts/kv-recall-test.py).
+
+```
+fp16 KV (control) @ 60k                q8_0 KV @ 60k
+  depth   5%  600 tok/s  FOUND           depth   5%  678 tok/s  FOUND
+  depth  50%  600 tok/s  FOUND           depth  50%  677 tok/s  FOUND
+  depth  95%  601 tok/s  FOUND           depth  95%  678 tok/s  FOUND
+  3/3                                    3/3
+```
+
+8/8 on each side across both lengths, with identical answers. Then the check
+that makes those numbers mean anything — **the same test with the needle removed
+entirely**, to prove it can fail:
+
+```
+=== NEGATIVE CONTROL (no needle in the document) ===
+  depth  50%  MISS  wanted 2611-MMM got '1942'
+  depth  95%  MISS  wanted 7382-NNN got 'The provided text does not contain any i'
+  0/2 found
+```
+
+It fails when it should, and at depth 95% the model says outright that the
+document contains no such code. Without that run, "8/8" would only have shown
+the test was easy.
+
+**Kept.** In practice a 60k-token agent prompt is processed in ~89 s instead of
+~101 s, and generation is a fifth faster, for no measured loss. What this does
+*not* establish is that reasoning over long context is unaffected — exact
+retrieval is the easiest long-context task there is. The honest claim is that
+recall is intact and the failure mode people warn about did not appear here.
 
 ## The acceptance tests were wrong, and passing them would have been worse
 
@@ -204,5 +260,7 @@ nobody revisited it.
 | A7.5 | Spend gate still correct after the upgrades | pass — 87/87, including all 10 regressions |
 | A7.6 | Backup still runs and the credential scan is clean | pass — dry run, 36 MB, 180 files, clean |
 | A7.7 | Package upgrade applied and verified | **deferred** — needs root; script written, guards and post-checks included |
+| A7.8 | KV-cache quantization measured, not assumed | pass — +18% generation, +13% prompt, KV 6.8 → 3.8 GB |
+| A7.9 | Long-context recall unharmed by it, and the test can fail | pass — 8/8 both configs at 32k and 60k, identical answers; negative control 0/2 |
 
 Phase 07 stays open on A7.7 until the packages go on.
