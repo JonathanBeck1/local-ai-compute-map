@@ -98,13 +98,32 @@ else
 fi
 
 # ---------------------------------------------------------------- A2.4
-hdr "A2.4  driver is held"
-H="$(apt-mark showhold 2>/dev/null | grep -i nvidia || true)"
+# This check used to demand `apt-mark hold` on the driver. That was reversed:
+# a hold strands the GPU at the next kernel ABI bump, because the package name
+# does not pin the driver branch, and unattended-upgrades refuses any
+# transaction containing a removal. A hold is now a FAILURE. What gets checked
+# instead is the thing the hold was meant to protect -- that the loaded kernel
+# module and the userspace driver are actually the same version.
+hdr "A2.4  driver and kernel module agree, and nothing is pinned"
+H="$(apt-mark showhold 2>/dev/null | grep -iE 'nvidia|linux-(image|headers|modules)' || true)"
 if [ -n "$H" ]; then
     printf '%s\n' "$H" | show
-    ok "nvidia packages are held"
+    no "held packages -- a hold strands the GPU at the next ABI bump; run: sudo apt-mark unhold <name>"
 else
-    no "no nvidia package is held -- run: sudo apt-mark hold nvidia-driver-<VERSION>-open"
+    ok "nothing is held"
+fi
+# read /proc rather than piping lsmod into grep -q, which fails under pipefail
+if grep -q '^nvidia ' /proc/modules 2>/dev/null; then
+    MODV="$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' /proc/driver/nvidia/version 2>/dev/null | head -1)"
+    SMIV="$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1 | tr -d ' ')"
+    out "kernel module $MODV   |   nvidia-smi $SMIV   |   kernel $(uname -r)"
+    if [ -n "$MODV" ] && [ "$MODV" = "$SMIV" ]; then
+        ok "kernel module and userspace driver are the same version"
+    else
+        no "version mismatch ('$MODV' vs '$SMIV') -- usually an upgrade without a reboot"
+    fi
+else
+    no "the nvidia kernel module is NOT loaded -- the GPU is unavailable to containers"
 fi
 
 # ---------------------------------------------------------------- A2.5
@@ -124,6 +143,8 @@ else
         no "A2.1 output changed since the baseline"
         out "baseline: $(cat "$BASELINE")"
         out "now     : $A21"
+        out "if the change was deliberate (a driver upgrade), record the new good state:"
+        out "rm $BASELINE && bash $0"
     fi
 fi
 
@@ -149,19 +170,25 @@ out "sudo mkdir -p /mnt/root && sudo mount /dev/<root-partition> /mnt/root && ls
 out "record the output in HARDWARE.md. Keep that stick; it is the rescue medium."
 
 # ---------------------------------------------------------------- A2.8
-hdr "A2.8  what is listening"
+# This check used to FAIL when nothing listened on port 22, which made a
+# correct machine look broken: SSH is deliberately absent until the network
+# rebuild, and the model endpoint is deliberately loopback-only. The outcome
+# worth testing is the opposite one -- that nothing is reachable off this box.
+hdr "A2.8  nothing is reachable beyond loopback"
 if ! have ss; then
     sk "ss not available"
 else
-    L="$(ss -tlnp 2>/dev/null)"
-    printf '%s\n' "$L" | head -15 | show
-    if printf '%s' "$L" | grep -qE ':22\b'; then
-        ok "something is listening on port 22"
-        printf '%s' "$L" | grep -qE ':22\b.*systemd' && out "owner is systemd -- correct, Ubuntu uses socket activation"
+    L="$(ss -tlnH 2>/dev/null)"
+    printf '%s\n' "$L" | awk '{print $4}' | sort -u | tr '\n' ' ' | show
+    NONLOCAL="$(printf '%s\n' "$L" | awk '{print $4}' \
+                | grep -vE '^(127\.|\[::1\])' | sort -u | tr '\n' ' ' || true)"
+    if [ -z "${NONLOCAL// /}" ]; then
+        ok "every listener is bound to loopback"
+        out "SSH is intentionally absent until the network rebuild; the model endpoint is 127.0.0.1 only"
     else
-        no "nothing on port 22 -- run: sudo apt install -y openssh-server && sudo systemctl enable --now ssh"
+        printf '%s\n' "$NONLOCAL" | show
+        no "these listeners are reachable from the LAN -- each one needs to be here on purpose"
     fi
-    out "save this list as your baseline of what should be reachable"
 fi
 
 # ---------------------------------------------------------------- A2.9
