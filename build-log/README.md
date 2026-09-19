@@ -28,6 +28,7 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 - [02 — Linux box, driver, containers](02-linux-box-driver-containers.md) — done; SSH and rescue boot deferred. Ran before 00 closed, against the rules below; the entry says so
 - [03 — Local model endpoint](03-local-model-endpoint.md) — done; Ollama in Docker, four models measured, loopback only. MoE spill result inside
 - [03b — Coding agent on the workstation](03b-coding-agent-on-the-workstation.md) — done; llmfit checked against measurements, Claude Code on a local 30B coder versus the paid model. Green tests, wrong output
+- [03c — Explicit MoE placement, measured against the automatic one](03c-moe-placement-measured.md) — llama.cpp hand-placed expert tensors vs Ollama's automatic split on the same GGUF blob. The 10% win was a VRAM budget, not an algorithm
 
 Planned. Each becomes a file when it has output in it, not before. Order changed 2026-09-11 with the roles above:
 
