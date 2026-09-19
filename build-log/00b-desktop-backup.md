@@ -64,7 +64,9 @@ The fix redacts that one known fake in the *copy*, never the original. The fake'
 
 The general lesson for anyone backing up agent sessions: **the transcript contains everything you typed, including the things you typed to test the thing that scans the transcript.**
 
-**2. The inventory found a local agent writing outside its directory.** A stray test file sat in the home directory. Its timestamp put it inside the [phase 03b](03b-coding-agent-on-the-workstation.md) local-model trial: an early draft the agent wrote to the wrong path before writing the real one in the folder it had been given. It was harmless here, but it's exactly what makes an unattended local agent risky, and the check at the time missed it by only looking inside the working directory. It's now recorded in 03b.
+**2. The inventory found a local agent writing outside its directory.** Stray files sat in the home directory. Its timestamp put it inside the [phase 03b](03b-coding-agent-on-the-workstation.md) local-model trial: an early draft the agent wrote to the wrong path before writing the real one in the folder it had been given. It was harmless here, but it's exactly what makes an unattended local agent risky, and the check at the time missed it by only looking inside the working directory. It's now recorded in 03b.
+
+**3. The inventory truncated without saying so, and missed one of those files.** It listed the home directory with `sort -rh | head -18`, meaning the 18 largest entries, and didn't mention that anything was left out. There were two stray files, not one. The second, `ollama_models.py`, ranked 26th by size. It turned up a week later, when a [rerun of the same agent](03b-coding-agent-on-the-workstation.md#rematch-2026-09-19-allowed-to-check-it-didnt) tried to write to that exact path and Claude Code refused, because a file was already there. **An inventory that caps its output has to say what it dropped**, or it's reporting a sample as a count.
 
 ## What I would do differently
 

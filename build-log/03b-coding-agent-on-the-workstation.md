@@ -89,7 +89,55 @@ At 64k context the MoE's split moved from 45/55 to 57% CPU / 43% GPU; the KV cac
 
 **3. Claude Code prices a free model.** `total_cost_usd: 1.097` in the local run's JSON. It's the estimate for an unrecognised model name at some default rate. Actual cost, zero. Anyone summing costs out of these result files would be wrong.
 
-**4. Found eight days later: the local agent wrote outside its directory.** An [inventory of the workstation](00b-desktop-backup.md) turned up a stray `test_ollama_models.py` in the home directory, timestamped inside the local run's window (14:03 to 14:12) and before the control run. It matches neither run's final test file, so it's an early draft that qwen3-coder wrote to the wrong path before writing the real one in the folder it had been given. The run was allowed `Write` with no path restriction, and it used that outside its directory. It was harmless here. It's also exactly what makes an unattended local agent risky, and the verification above missed it because it only looked inside the working directory. **Check where an agent wrote, not only what it wrote where you expected.**
+**4. Found eight days later: the local agent wrote outside its directory.** An [inventory of the workstation](00b-desktop-backup.md) turned up stray files in the home directory, timestamped inside the local run's window (14:03 to 14:12) and before the control run. There were two: `test_ollama_models.py` and `ollama_models.py`, written at 14:04 and 14:05. The inventory first reported only one, for reasons covered in 00b. Neither matches the run's final files, so they're early drafts that qwen3-coder wrote to the wrong path before writing the real ones in the folder it had been given. The run was allowed `Write` with no path restriction, and it used that outside its directory. It was harmless here. It's also exactly what makes an unattended local agent risky, and the verification above missed it because it only looked inside the working directory. **Check where an agent wrote, not only what it wrote where you expected.**
+
+## Rematch, 2026-09-19: allowed to check, it didn't
+
+The obvious objection to the result above is that the local model had no way to check the API, so its guess was unavoidable. The fix was one permission: let it `curl` the real endpoint. I added `Bash(curl:*)` to its allowed tools, and changed nothing else: same task, same model, a fresh folder. I **didn't tell it to look**, because the question was whether it would choose to. Every action was recorded, and a timestamp marker was set so that writes *anywhere* in the home directory could be found afterwards, not just in its folder.
+
+```
+                              first run        rematch
+allowed to curl the API       no               yes
+curl calls made               -                0 of 29 actions
+wall time                     580 s            1,344 s
+commands rejected             -                9  (python, mv, cd && ... -- not on its list)
+files in its project folder   4                0
+files written to ~ instead    2                6, plus __pycache__ and .pytest_cache
+PARAMS / QUANT columns        empty            empty -- the identical model.get('parameters') guess
+its tests, re-run by me       3 passed         3 passed / 3 passed / 1 failed
+its own verdict               "successfully"   "successfully"
+```
+
+**It never looked.** It made the identical wrong guess, wrote tests that encode the guess, and reported success. Giving it the means to check changed nothing, because it doesn't check. **The limit is behaviour, not access.**
+
+**It wrote everything in the wrong place, and that wasn't my launch.** Having blamed the wrong cause for an outage elsewhere in this log, I checked. The recording's first event shows Claude Code started in exactly the right folder. The model's *first* file path, before it had read anything, was in the home directory. The Opus control kept all its files in its own folder.
+
+**It overwrote a file it hadn't created.** One of the stray drafts from the first run was still sitting in the home directory. Claude Code's read-before-write guard blocked the first two attempts to write it, then allowed the third, because the model had read the file in between. **That guard asks "did you read it?", not "is it yours?"** It doesn't stop an agent that reads first.
+
+### Making it a one-command tool anyway
+
+The mechanics work fine. `claude-local` is a small shell function that points Claude Code at the local endpoint for that one command, so plain `claude` is unaffected:
+
+```bash
+claude-local() {
+    local url="${CLAUDE_LOCAL_URL:-http://127.0.0.1:11434}"
+    local model="${CLAUDE_LOCAL_MODEL:-qwen3-coder:30b}"
+    if ! curl -fsS -m 3 "$url/api/version" >/dev/null 2>&1; then
+        echo "claude-local: no Ollama endpoint answering at $url" >&2; return 1
+    fi
+    local mode=()
+    case " $* " in
+        *" --permission-mode "*) ;;
+        *) mode=(--permission-mode "${CLAUDE_LOCAL_MODE:-manual}") ;;
+    esac
+    ANTHROPIC_BASE_URL="$url" ANTHROPIC_AUTH_TOKEN=ollama ANTHROPIC_API_KEY="" \
+        command claude --model "$model" "${mode[@]}" "$@"
+}
+```
+
+Startup is better than the first number suggested. Claude Code sends the model about 18,000 tokens of instructions. The first run after the model had unloaded took **116 s**, the next **15.6 s**, and the next **0.3 s**. Ollama served 18,016 of those 18,017 tokens from its prompt cache and even reported it in the same `cache_read_input_tokens` field the paid API uses. The model stays warm for 30 minutes.
+
+Because of the rematch, `claude-local` **always starts in the mode that asks before every file write and command**, unless you deliberately choose otherwise. A path in the home directory then shows up as a question, not something already done. It's usable for drafts you approve step by step. It isn't usable headless with writes pre-approved, or in accept-edits or auto mode.
 
 ## What I would do differently
 
