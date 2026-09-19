@@ -55,7 +55,7 @@ Already exists. Not a third-party product.
 - Perplexity Portable Computer — per-step approval before cloud escalation, PII classifier over what leaves. DGX Spark or Linux + RTX ≥24 GB. Hybrid Compute does the same on Apple silicon since 2026-09-01, 24 GB minimum. Subscription.
 - LM Studio Bionic — reviews shell commands before running (1.1.0, 2026-08-27).
 
-Agent-initiated cloud spend is the one thing on this page nothing gates.
+Agent-initiated cloud spend is the one thing on this page nothing gates. The build log has one now: [06b](build-log/06b-spend-gate.md), a Claude Code hook that blocks paid-compute launches at a configurable cap. It's a policy check on an agent's commands, not a security boundary, and the entry says exactly where it stops. Getting it right took about 300 lines, not 60, because the naive version blocks your own commit messages.
 
 ## Hardware
 
@@ -84,7 +84,7 @@ The 4070 out-decodes the Spark on anything that fits in 12 GB, with a tenth of t
 
 [`build-log/`](build-log/) — one worked example of the above, on ordinary hardware: an 18 GB laptop, a 16 GB Mac mini, a 12 GB GPU. Not a 4x4090 rig. Output pasted in, failures left where they happened.
 
-Phase 00 is up: no Time Machine destination configured at all, and 28 repos with uncommitted work against 7 with unpushed commits. Phase 02 is up: the gaming PC is now an Ubuntu CUDA node, and Docker 29 put the first image on the wrong disk while its own check said otherwise. Phase 03 is up: Ollama on that box, four models with measured tok/s, and a 30B MoE that doesn't fit the 12 GB card running as fast as a 12B that does. Phase 03b is up: Claude Code on that local 30B coder versus the paid model, same task — eleven times slower, tests green, two columns wrong. Phase 03c is up: hand-placed MoE expert tensors in llama.cpp against Ollama's automatic split, same weights file both sides — the apparent 10% win turned out to be 9% more VRAM being spent, and on a machine that also drives three monitors that margin is not spare. The rest go up as I run them.
+Phase 00 is up: no Time Machine destination configured at all, and 28 repos with uncommitted work against 7 with unpushed commits. Phase 02 is up: the gaming PC is now an Ubuntu CUDA node, and Docker 29 put the first image on the wrong disk while its own check said otherwise. Phase 03 is up: Ollama on that box, four models with measured tok/s, and a 30B MoE that doesn't fit the 12 GB card running as fast as a 12B that does. Phase 03b is up: Claude Code on that local 30B coder versus the paid model, same task — eleven times slower, tests green, two columns wrong. Phase 03c is up: hand-placed MoE expert tensors in llama.cpp against Ollama's automatic split, same weights file both sides — the apparent 10% win turned out to be 9% more VRAM being spent, and on a machine that also drives three monitors that margin is not spare. Phase 06b is up: a spend gate, built at a $0 budget before any cloud account existed, then shown blocking Claude's own attempt to launch a GPU. The rest go up as I run them.
 
 ## Corrections
 

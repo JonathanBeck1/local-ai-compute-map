@@ -30,10 +30,11 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 - [03 — Local model endpoint](03-local-model-endpoint.md) — done; Ollama in Docker, four models measured, loopback only. MoE spill result inside
 - [03b — Coding agent on the workstation](03b-coding-agent-on-the-workstation.md) — done; llmfit checked against measurements, Claude Code on a local 30B coder versus the paid model. Green tests, wrong output
 - [03c — Explicit MoE placement, measured against the automatic one](03c-moe-placement-measured.md) — llama.cpp hand-placed expert tensors vs Ollama's automatic split on the same GGUF blob. The 10% win was a VRAM budget, not an algorithm
+- [06b — A spend gate, built before there was anything to spend](06b-spend-gate.md) — a Claude Code hook that stops an agent launching paid cloud compute; at a $0 cap it blocked Claude itself, live. 0 false positives across 207 real commands
 
 Planned. Each becomes a file when it has output in it, not before. Order changed 2026-09-11 with the roles above:
 
-00b desktop backup — the work lives there now and nothing copies it; the NAS is the target · 05 always-on services and archive · 06a cloud burst, bounded · 06b spend gate
+00b desktop backup — the work lives there now and nothing copies it; the NAS is the target · 05 always-on services and archive · 06a cloud burst, bounded (deferred: budget is $0, by choice)
 
 Deferred, with the reason: **01 naming and access** (Tailscale, keys-only SSH, endpoint on the mesh) is written and reviewed but not run. The LAN is being rebuilt on Ubiquiti gear and no remote-access service goes on any machine until that is done. **04 laptop remote workflow** collapses into 01's acceptance checks once 01 happens — it's "reach the desktop from the laptop," nothing more.
 
