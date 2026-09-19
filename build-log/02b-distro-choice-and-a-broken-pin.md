@@ -98,7 +98,21 @@ The fallback's GPU module `Depends: nvidia-kernel-common-595 (>= 595.91.07)` —
 
 **4. `--dry-run` gave a clean all-clear on the one command that fails.** The wrapper printed `[dry-run] apt-get install ...` instead of simulating it. A cautious operator doing the responsible thing would have been told everything was fine, then watched it die for real. A rehearsal that doesn't exercise the failing path is worse than none, because it converts caution into confidence.
 
-Both were caught by adversarial review before the script was run — five independent lenses over it (boot safety, apt semantics, GRUB, rollback, shell correctness), every finding then handed to a separate agent told to refute it. 14 findings survived refutation; three were this blocker approached from different angles.
+**5. `lsmod | grep -q` fails every time under `set -o pipefail`.** Revision 2 of the repair script refused to start — "the nvidia kernel module is not loaded" — two lines after printing `NVIDIA GeForce RTX 4070, 595.84`. `grep -q` exits at the first match, `lsmod` takes SIGPIPE (141), `pipefail` propagates it:
+
+```
+pipefail ON : 40/40 spurious failures
+pipefail OFF: 0/40 spurious failures
+grep -q '^nvidia ' /proc/modules (no pipeline): 0/40
+```
+
+Fixed by reading `/proc/modules`, which is what `lsmod` reads anyway.
+
+**The adversarial review missed it.** One of the five lenses was specifically shell correctness — "find every place where a legitimately-empty result would abort" — and it returned five real `set -e` hazards. None of them was the one that made the script refuse to run on every single invocation. **Running the rehearsal found it in one command.** A review of a rehearsal is not a substitute for running it, which is the same lesson as finding 4 arriving from the opposite direction.
+
+**6. The rehearsal required root, so nobody would have run it.** `--dry-run` was gated behind `id -u -eq 0` along with everything else, despite touching nothing privileged. A dry run you need sudo for is a dry run people skip.
+
+Findings 3 and 4 were caught by adversarial review before the script was run — five independent lenses over it (boot safety, apt semantics, GRUB, rollback, shell correctness), every finding then handed to a separate agent told to refute it. 14 findings survived refutation; three were this blocker approached from different angles.
 
 **5. A fact in the record was an inference.** The hardware record said the driver was "installed automatically by the Ubuntu installer's third-party-drivers option". What the apt log actually shows is `apt-get install -y nvidia-driver-595-open linux-modules-nvidia-595-open-generic-hwe-24.04` at 21:14:56 on install day — consistent with the installer checkbox, with `ubuntu-drivers autoinstall`, or with the Software & Updates GUI. I wrote down the inference as a fact. Now recorded as unknown.
 
