@@ -89,6 +89,8 @@ At 64k context the MoE's split moved from 45/55 to 57% CPU / 43% GPU; the KV cac
 
 **3. Claude Code prices a free model.** `total_cost_usd: 1.097` in the local run's JSON. It's the estimate for an unrecognised model name at some default rate. Actual cost, zero. Anyone summing costs out of these result files would be wrong.
 
+**4. Found eight days later: the local agent wrote outside its directory.** An [inventory of the workstation](00b-desktop-backup.md) turned up a stray `test_ollama_models.py` in the home directory, timestamped inside the local run's window (14:03 to 14:12) and before the control run. It matches neither run's final test file, so it's an early draft that qwen3-coder wrote to the wrong path before writing the real one in the folder it had been given. The run was allowed `Write` with no path restriction, and it used that outside its directory. It was harmless here. It's also exactly what makes an unattended local agent risky, and the verification above missed it because it only looked inside the working directory. **Check where an agent wrote, not only what it wrote where you expected.**
+
 ## What I would do differently
 
 Give the agent one read-only probe of the real API, then judge it. Both runs were denied `curl` for fairness; the result is that the trial measured API knowledge as much as coding. A second trial with `Bash(curl http://127.0.0.1:11434/api/*)` allowed would say whether the local model *would have* looked.

@@ -25,6 +25,7 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 ## Entries
 
 - [00 — Protect and inventory](00-protect-and-inventory.md) — inventory done, backup not yet configured
+- [00b — What on the workstation exists nowhere else](00b-desktop-backup.md) — about 45 MB is irreplaceable and 100 GB re-downloads; backed up and restore-tested. The credential scan fired on a fake token the transcript had recorded
 - [02 — Linux box, driver, containers](02-linux-box-driver-containers.md) — done; SSH and rescue boot deferred. Ran before 00 closed, against the rules below; the entry says so
 - [02b — The distro I never chose, and the pin that would have broken](02b-distro-choice-and-a-broken-pin.md) — Ubuntu examined against Debian 13 and Fedora 44 after the fact and ratified; an acceptance test that passed on a configuration which would have lost the GPU; and an outage I blamed on the repair that turned out to be a monitor on a PS5 input
 - [03 — Local model endpoint](03-local-model-endpoint.md) — done; Ollama in Docker, four models measured, loopback only. MoE spill result inside
@@ -34,7 +35,7 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 
 Planned. Each becomes a file when it has output in it, not before. Order changed 2026-09-11 with the roles above:
 
-00b desktop backup — the work lives there now and nothing copies it; the NAS is the target · 05 always-on services and archive · 06a cloud burst, bounded (deferred: budget is $0, by choice)
+00b part 2, the NAS — now a convenience (saves a 100 GB re-download), not the backup · 05 always-on services and archive · 06a cloud burst, bounded (deferred: budget is $0, by choice)
 
 Deferred, with the reason: **01 naming and access** (Tailscale, keys-only SSH, endpoint on the mesh) is written and reviewed but not run. The LAN is being rebuilt on Ubiquiti gear and no remote-access service goes on any machine until that is done. **04 laptop remote workflow** collapses into 01's acceptance checks once 01 happens — it's "reach the desktop from the laptop," nothing more.
 
