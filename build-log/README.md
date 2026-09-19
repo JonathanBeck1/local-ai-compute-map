@@ -24,6 +24,7 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 
 - [00 — Protect and inventory](00-protect-and-inventory.md) — inventory done, backup not yet configured
 - [02 — Linux box, driver, containers](02-linux-box-driver-containers.md) — done; SSH and rescue boot deferred. Ran before 00 closed, against the rules below; the entry says so
+- [02b — The distro I never chose, and the pin that would have broken](02b-distro-choice-and-a-broken-pin.md) — Ubuntu examined against Debian 13 and Fedora 44 after the fact and ratified; and an acceptance test that passed on a configuration which would have lost the GPU at the next kernel update
 
 Planned, in order. Each becomes a file when it has output in it, not before:
 
