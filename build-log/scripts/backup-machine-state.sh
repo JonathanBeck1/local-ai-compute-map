@@ -15,6 +15,7 @@
 #   ~/.claude/hooks/             the spend gate
 #   ~/.config/spend-gate/        the spend policy
 #   ~/.local/state/spend-gate/   the spend audit log
+#   ~/.bash_aliases              hand-written shell functions that exist nowhere else
 #   /etc/...                     the current state of every system file this build changed
 #
 # Deliberately NOT copied: etckeeper's full /etc history (/etc/.git). It contains
@@ -47,12 +48,14 @@ ETC_FILES=(
 CRED='gh[opusr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{32,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{35}|"(access|refresh)_token"[[:space:]]*:[[:space:]]*"[^"*]{20,}'
 
 echo "==> copying into $DEST"
-mkdir -p "$DEST/claude" "$DEST/config" "$DEST/state" "$DEST/etc"
+mkdir -p "$DEST/claude" "$DEST/config" "$DEST/state" "$DEST/etc" "$DEST/shell"
 rsync -a --delete ~/.claude/projects/        "$DEST/claude/projects/"
 rsync -a --delete ~/.claude/hooks/           "$DEST/claude/hooks/"
 cp -a ~/.claude/settings.json                "$DEST/claude/settings.json"
 rsync -a --delete ~/.config/spend-gate/      "$DEST/config/spend-gate/"
 rsync -a --delete ~/.local/state/spend-gate/ "$DEST/state/spend-gate/"
+# Hand-written shell state: wrapper functions live only here.
+[ -r ~/.bash_aliases ] && cp -a ~/.bash_aliases "$DEST/shell/bash_aliases"
 for f in "${ETC_FILES[@]}"; do
     if [ -r "$f" ]; then
         mkdir -p "$DEST/etc$(dirname "$f")"

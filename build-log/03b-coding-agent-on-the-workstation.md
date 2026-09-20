@@ -167,6 +167,51 @@ Two things came out better. The newer models **kept to their project folders**; 
 
 **No local model tested here is a trustworthy coding agent.** `claude-local` now defaults to laguna, because it stays in its folder, and it still asks before every write.
 
+## Fifth contestant: an 80B, to test whether the ceiling is model size
+
+The four above are all ~30B. If the failure is capacity, a much larger model should clear the bar. `Qwen3-Next-80B-A3B` at Q4_K_S — 80B total, 3B active, 45.5 GB, running at 40 tok/s on this box (see [03](03-local-model-endpoint.md)) — took the identical exam: same task, same allowed tools, same 45-minute limit, same grader.
+
+```
+                          qwen3-next-80b    (best of the four 30B)
+wall time                    166 s            421 s
+turns / tool calls           4 / 3            17 / 16
+curl calls                   0                0
+produced a tool              yes              yes (laguna, qwen3-coder)
+table with real values       YES  <- first    no
+--json valid                 YES  <- first    no
+error path exits non-zero    YES              yes
+its own tests pass           no (3 failed)    yes (laguna, on wrong data)
+followed the spec            no               partly
+```
+
+**It is by far the best result, and it still fails.** Six times faster than the best 30B, and the first local model whose tool renders a real table with real quantizations (`Q4_K_S`, `Q8_0`) and real parameter sizes (`79.7B`, `873.44M`), emits valid `--json`, and exits non-zero on an unreachable server. Everything the four before it got wrong, it got right.
+
+Then the one requirement the whole task is built around:
+
+```python
+def fetch_ollama_ps():
+    with urllib.request.urlopen("http://127.0.0.1:11434/api/ps") as response:
+        data = json.loads(response.read())
+        return data.get("processes", [])      # Ollama returns {"models": [...]}
+```
+
+`/api/ps` has no `processes` key. The `.get(…, [])` default turns a wrong guess into an empty list, so **every model reports LOADED "no", permanently** — verified with a model provably resident:
+
+```
+$ curl -s /api/ps -> resident: ['qwen3.5:0.8b']
+$ python3 ollama_info.py | grep 0.8b
+  qwen3.5:0.8b    1.0    873.44M    Q8_0    no
+  {"name": "qwen3.5:0.8b", …, "loaded": false, "size_vram_gb": null}
+```
+
+**A fifth model, four times the parameters, invented a field name and never ran the one command that would have corrected it.** Five of five contestants, 276 tool actions, **zero curls**. Its own three tests would have caught nothing either — they fail to run at all (`Mock` misuse, and `urllib` referenced but never imported), so it validated nothing and reported success anyway.
+
+It also ignored three explicit instructions — both required filenames (`ollama_models.py`, `test_ollama_models.py`) and the specified runner (`uvx pytest -q`, the one form that was permitted). It ran `python3 -m pytest`, was denied, and **stopped after a single denial** to ask the human, where the four smaller models pushed through 6–25 denials.
+
+**So the ceiling is not model size.** A 2.7× larger, far more capable model writes much better code and then fails the same way, for the same reason: it does not check its assumptions against a reachable source of truth, and its tests encode the assumption rather than testing it. That is the identical failure this log keeps recording in its *own* checks — a proxy passing while the outcome is false. The difference is that a person eventually notices; the model reported "the tests are designed to mock the HTTP layer" and considered it verified.
+
+`claude-local` stays in ask-mode. The 80B is now the best available *drafting* model on this machine — its code is closest to correct and it is folder-disciplined — but "best" still means every line needs reading.
+
 ## What I would do differently
 
 Give the agent one read-only probe of the real API, then judge it. Both runs were denied `curl` for fairness; the result is that the trial measured API knowledge as much as coding. A second trial with `Bash(curl http://127.0.0.1:11434/api/*)` allowed would say whether the local model *would have* looked.
