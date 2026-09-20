@@ -1,8 +1,8 @@
 # Phase 07 — A maintenance pass, and a headline that stopped being true
 
-**Status:** done, except the package upgrade, which needs physical access
-**Date:** 2026-09-19
-**Elapsed:** ~1.5 h
+**Status:** done
+**Date:** 2026-09-19, packages applied 2026-09-20
+**Elapsed:** ~1.5 h, plus ~20 min for the apply
 **Cost:** $0
 
 ## Goal
@@ -23,16 +23,16 @@ running since [phase 03c](03c-moe-placement-measured.md).
 |---|---|---|---|
 | Kernel 7.0.0-31, NVIDIA 595.91.07 | current | — | nothing pending, no holds, no reboot waiting |
 | Ollama (Docker, pinned tag) | 0.33.3 | 0.34.2 | **upgraded** |
-| docker-ce | 29.8.0 | 29.8.1 | deferred, needs root |
-| nvidia-container-toolkit | 1.20.0 | 1.20.1 | deferred, needs root |
-| Other OS packages | — | 93 upgradable | deferred, needs root |
+| docker-ce | 29.8.0 | 29.8.1 | **applied** |
+| nvidia-container-toolkit | 1.20.0 | 1.20.1 | **applied** |
+| Other OS packages | — | 93 upgradable | **applied** — 92 upgraded, 1 new, 0 removed |
 
 None of the 93 touch the kernel, the driver or GRUB. `unattended-upgrades`
 handles Ubuntu security updates only; Docker and NVIDIA ship from their own
 repos, and the Ollama image moves only when its tag is changed here.
 
-The package half is written as [`scripts/maintenance.sh`](scripts/maintenance.sh)
-and has not been run. It refuses to proceed if the plan removes any package
+The package half is [`scripts/maintenance.sh`](scripts/maintenance.sh), **run on
+2026-09-20**. It refuses to proceed if the plan removes any package
 (the shape of a branch transition, which is what
 [02b](02b-distro-choice-and-a-broken-pin.md) is about) or touches the kernel or
 driver, which on this machine move together and deliberately. Afterwards it
@@ -259,8 +259,39 @@ nobody revisited it.
 | A7.4 | Acceptance tests green, and the checks themselves verified | pass — 11/0/1/1, both rewrites shown failing on a synthetic broken config |
 | A7.5 | Spend gate still correct after the upgrades | pass — 87/87, including all 10 regressions |
 | A7.6 | Backup still runs and the credential scan is clean | pass — dry run, 36 MB, 180 files, clean |
-| A7.7 | Package upgrade applied and verified | **deferred** — needs root; script written, guards and post-checks included |
+| A7.7 | Package upgrade applied and verified | pass — 92 upgraded, 0 removed, kernel and driver untouched; all three post-checks passed |
 | A7.8 | KV-cache quantization measured, not assumed | pass — +18% generation, +13% prompt, KV 6.8 → 3.8 GB |
 | A7.9 | Long-context recall unharmed by it, and the test can fail | pass — 8/8 both configs at 32k and 60k, identical answers; negative control 0/2 |
 
-Phase 07 stays open on A7.7 until the packages go on.
+**Phase closed 2026-09-20.** The apply run, verified by outcome:
+
+```
+==> check 1: docker and containerd really store data on /srv/ai-lab
+    pass: docker root /srv/ai-lab/docker is on /dev/sda1
+    pass: containerd root /srv/ai-lab/containerd is on /dev/sda1
+==> check 2: a container can see the GPU through the upgraded toolkit
+    pass: container saw the GPU (via nvidia/cuda:12.6.3-base-ubuntu24.04)
+==> check 3: Ollama is back, loopback-only, 64k context, generating on the GPU
+    pass: Ollama answering on loopback, version 0.34.2
+    pass: port binding is loopback-only: 11434/tcp -> 127.0.0.1:11434
+    pass: OLLAMA_CONTEXT_LENGTH=65536
+    pass: generation completed
+    pass: weights are in VRAM: qwen3.5:0.8b at 100% GPU
+
+docker-ce 5:29.8.1   nvidia-container-toolkit 1.20.1   kernel 7.0.0-31   driver 595.91.07
+93 upgradable -> 1 (dnsmasq-base, held back pending a dependency)
+REBOOT REQUESTED by: gnome-shell
+```
+
+**Running it needed a detour worth recording.** The machine was being driven remotely, so the plan was to run the upgrade from a TTY, outside the desktop session — this upgrade replaces `gdm3`, `gnome-shell`, `mutter` and `xserver-xorg-core` underneath a live session, and if the display manager went down it would take the terminal, and `dpkg`, with it. A TTY was not available, so the run was detached with `systemd-run` instead, which puts it in the system scope where nothing in the desktop session can reach it.
+
+That nearly introduced a worse failure. The obvious invocation uses `--service-type=oneshot`, and a `oneshot` unit inherits `DefaultTimeoutStartSec` — **90 seconds** — which would have killed a 92-package transaction partway through. `TimeoutStartSec` could not be raised: `-p TimeoutStartSec=infinity`, `--property=` before the unit name, and an explicit `7200` were all accepted silently and all left the value at 90 s. The fix was to drop `oneshot` and use the default `Type=simple`, where the start timeout bounds the fork rather than the run, confirmed with a 100-second probe before anything touched `dpkg`:
+
+```
+90s:  ActiveState=active   Result=success
+100s: ActiveState=inactive Result=success
+```
+
+**A safety measure that silently doesn't apply is worse than none**, because it is trusted. The command was tested on a harmless job first for exactly that reason.
+
+`needrestart` is not installed here, so nothing auto-restarted mid-transaction. The script now exports `NEEDRESTART_MODE=l` anyway, since the same script is meant for the second CUDA node later, where it may well be.
