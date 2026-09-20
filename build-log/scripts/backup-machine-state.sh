@@ -16,6 +16,7 @@
 #   ~/.config/spend-gate/        the spend policy
 #   ~/.local/state/spend-gate/   the spend audit log
 #   ~/.bash_aliases              hand-written shell functions that exist nowhere else
+#   Open WebUI chats             its SQLite db, with credentials stripped from the copy
 #   /etc/...                     the current state of every system file this build changed
 #
 # Deliberately NOT copied: etckeeper's full /etc history (/etc/.git). It contains
@@ -48,7 +49,7 @@ ETC_FILES=(
 CRED='gh[opusr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{32,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{35}|"(access|refresh)_token"[[:space:]]*:[[:space:]]*"[^"*]{20,}'
 
 echo "==> copying into $DEST"
-mkdir -p "$DEST/claude" "$DEST/config" "$DEST/state" "$DEST/etc" "$DEST/shell"
+mkdir -p "$DEST/claude" "$DEST/config" "$DEST/state" "$DEST/etc" "$DEST/shell" "$DEST/openwebui"
 rsync -a --delete ~/.claude/projects/        "$DEST/claude/projects/"
 rsync -a --delete ~/.claude/hooks/           "$DEST/claude/hooks/"
 cp -a ~/.claude/settings.json                "$DEST/claude/settings.json"
@@ -56,6 +57,44 @@ rsync -a --delete ~/.config/spend-gate/      "$DEST/config/spend-gate/"
 rsync -a --delete ~/.local/state/spend-gate/ "$DEST/state/spend-gate/"
 # Hand-written shell state: wrapper functions live only here.
 [ -r ~/.bash_aliases ] && cp -a ~/.bash_aliases "$DEST/shell/bash_aliases"
+
+# Open WebUI chats. Two reasons this is not a cp:
+#   1. the database is SQLite in WAL mode, so copying the file while the
+#      container is writing can capture a torn state. The backup API takes a
+#      consistent snapshot against a live writer.
+#   2. the copy is then STRIPPED of credentials -- auth.password is a bcrypt
+#      hash, and api_key/oauth_session can hold live tokens. The same rule that
+#      keeps /etc/shadow out of this repo applies to them. Chats, notes, folders
+#      and settings are kept; on a restore you re-set the password.
+OWUI_SRC=/srv/ai-lab/openwebui/webui.db
+if [ -r "$OWUI_SRC" ]; then
+    python3 - "$OWUI_SRC" "$DEST/openwebui/webui.db" <<'PY'
+import os, sqlite3, sys
+src, dst = sys.argv[1], sys.argv[2]
+if os.path.exists(dst):
+    os.remove(dst)
+s = sqlite3.connect("file:%s?mode=ro" % src, uri=True)
+d = sqlite3.connect(dst)
+with d:
+    s.backup(d)                      # consistent snapshot, WAL-safe
+s.close()
+stripped = []
+for sql, label in (("UPDATE auth SET password=''", "auth.password"),
+                   ("DELETE FROM api_key", "api_key"),
+                   ("DELETE FROM oauth_session", "oauth_session")):
+    try:
+        with d:
+            n = d.execute(sql).rowcount
+        stripped.append("%s(%d)" % (label, n))
+    except sqlite3.Error:
+        pass                         # table absent in this version; nothing to strip
+d.execute("VACUUM")                  # do not leave the old bytes in free pages
+d.close()
+print("   open-webui: chats copied, credentials stripped: %s" % (", ".join(stripped) or "none"))
+PY
+else
+    echo "   skipped (absent): $OWUI_SRC"
+fi
 for f in "${ETC_FILES[@]}"; do
     if [ -r "$f" ]; then
         mkdir -p "$DEST/etc$(dirname "$f")"
