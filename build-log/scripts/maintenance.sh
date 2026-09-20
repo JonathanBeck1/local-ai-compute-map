@@ -123,6 +123,10 @@ fi
 
 # --------------------------------------------------------------------- apply
 echo "==> upgrading"
+# If needrestart is installed, its automatic mode can restart the display
+# manager mid-transaction -- killing the terminal running this script and
+# leaving dpkg half-done. 'l' = list what needs restarting, restart nothing.
+export NEEDRESTART_MODE=l NEEDRESTART_SUSPEND=1
 DEBIAN_FRONTEND=noninteractive apt-get -y --with-new-pkgs \
     -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold upgrade
 echo
