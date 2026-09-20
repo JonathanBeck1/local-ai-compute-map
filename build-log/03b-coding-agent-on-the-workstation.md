@@ -210,7 +210,65 @@ It also ignored three explicit instructions — both required filenames (`ollama
 
 **So the ceiling is not model size.** A 2.7× larger, far more capable model writes much better code and then fails the same way, for the same reason: it does not check its assumptions against a reachable source of truth, and its tests encode the assumption rather than testing it. That is the identical failure this log keeps recording in its *own* checks — a proxy passing while the outcome is false. The difference is that a person eventually notices; the model reported "the tests are designed to mock the HTTP layer" and considered it verified.
 
-`claude-local` stays in ask-mode. The 80B is now the best available *drafting* model on this machine — its code is closest to correct and it is folder-disciplined — but "best" still means every line needs reading.
+`claude-local` stays in ask-mode.
+
+## Asking for the assumptions changes what you get
+
+2026-09-20, same 80B, this time in a chat window rather than an agent harness,
+and with one sentence added to the task: *"before writing any code, list every
+assumption you are making about the JSON, and mark each one VERIFIED or
+GUESSED."* No tools, no network, so nothing could be checked.
+
+**It listed them.** Roughly fifteen assumptions, and crucially it marked the two
+that matter — `running` and `vram` on `/api/ps` — as **GUESSED**. The same model
+that silently invented field names in the exam above flagged them when asked.
+
+The code was still wrong. Run against the live endpoint:
+
+```
+Name                            Size(GB)   Params     Quant  Loaded  VRAM(GB)
+qwen3-next-80b:q4ks                 42.4      80B      q4ks      no       0.0
+qwen3.5:0.8b                         1.0       8B      0.8b      no       0.0
+```
+
+**The model that wrote the script was resident at that moment with 10.5 GB in
+VRAM, and its own tool reports `Loaded: no, VRAM 0.0`.** It cannot see itself.
+`/api/ps` has no `running` field — presence *is* running — and the VRAM field is
+`size_vram`, not `vram`. Two of six columns survive.
+
+Three things in the assumption list are worth more than the code:
+
+**It marked four assumptions VERIFIED with no network access.** The sharpest:
+
+> `name: matching /api/tags model names — VERIFIED (must match for correlation)`
+
+Circular: verified because the script requires it. A design requirement restated
+as a confirmed fact. The rest lean on "standard API design" and "well-known
+convention" — recall, presented as verification.
+
+**It hypothesised the correct structure and then talked itself out of it.** The
+tags section contains `details: object — GUESSED (Ollama API may nest model
+metadata)`. Eleven lines later: `Parameter size: Not directly exposed by Ollama
+API — GUESSED`. That is false, and it had already guessed the answer:
+`details.parameter_size` and `details.quantization_level` are exactly where the
+two fabricated columns live. Having suspected the nested object, it asserted the
+data did not exist and regexed filenames instead — which is why the Quant column
+prints `latest` and `30b`, and why a 873M model is labelled "8B".
+
+**It closed with "this script is production-ready under the assumptions
+stated"** — after fifteen guesses, four mislabelled, two fatal.
+
+**The finding is the behavioural one.** Same model, same task, one added
+sentence: silent invention becomes labelled invention. It still does not act on
+its own uncertainty — it never says "I should check this first" — but it
+surfaces it, which is the difference between a bug caught in review and one
+caught in production. That is cheap enough to make a standing rule, and it is
+now in the `claude-local` header:
+
+> Ask for assumptions before code, marked VERIFIED or GUESSED. Then check every
+> GUESSED one yourself, and treat every VERIFIED one as GUESSED too, because the
+> model cannot tell the difference.
+ The 80B is now the best available *drafting* model on this machine — its code is closest to correct and it is folder-disciplined — but "best" still means every line needs reading.
 
 ## What I would do differently
 
