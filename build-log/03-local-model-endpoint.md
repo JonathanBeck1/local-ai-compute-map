@@ -90,7 +90,44 @@ Sanity check against the map's bandwidth rule for gemma4: 504 GB/s ÷ 7.6 GB ≈
 
 So the working rule for a 12 GB card with a lot of RAM behind it: dense models up to ~8 GB in VRAM, *or* MoE models up to what RAM holds, at about the same generation speed. The map's "12 GB is the real ceiling" is a dense-model ceiling. The build-log README now says so.
 
-> **Corrected 2026-09-19 in [07](07-maintenance-pass.md).** Everything above is a fact about a **4k** operating point, the default in force when it was measured. [03c](03c-moe-placement-measured.md) later set the endpoint to 64k, where the KV cache takes ~6.8 GB of the 12 GB card, only 43% of the MoE stays in VRAM, and it generates at **38.2 tok/s — 31% slower** than `gemma4:12b`, not equal to it. The dense models are flat across context because their weights never leave VRAM. The rule above needs "at short context" attached to it, and nobody re-measured when the configuration changed.
+### Re-measured 2026-09-19: seven models, at the operating point this endpoint actually runs
+
+The table above is four models at 4k. This is every model installed a week later, at 64k with the q8_0 KV cache — the configuration the machine serves from. Each row warm: the model is loaded, generated once and discarded, then measured, because mmap'd weights fault in from disk *during* the first generation and depress it.
+
+```
+model                    params  file     gen tok/s  resident in VRAM   loaded
+qwen3.5:0.8b             873 M   1.0 GB      262.4   100%               1.9 GB
+qwen3.5:9b               9.7 B   6.6 GB       76.8   100%               7.7 GB
+laguna-xs-2.1            33.4 B  20.3 GB      70.1    45%              20.8 GB
+gemma4:12b               11.9 B  7.6 GB       55.7   100%               8.1 GB
+north-mini-code-1.0      30.5 B  18.6 GB      51.8    51%              19.3 GB
+nemotron-3.5-lightning   32.9 B  25.4 GB      46.5    35%              25.8 GB
+qwen3-coder:30b          30.5 B  18.6 GB      45.1    49%              22.4 GB
+```
+
+**A 33B model with 55% of itself in system RAM beats a 12B sitting entirely in VRAM.** That is the MoE result again, and it is not a rounding error — laguna does 70.1 against gemma4's 55.7.
+
+### Why an MoE survives spilling and a dense model does not
+
+Ollama places whole layers on the GPU at load time, in order, and `num_gpu` sets how many. Forcing a model that fits to use fewer GPU layers therefore simulates being too big for the card, with everything else held constant. Same prompt, warm each time, 4k context:
+
+```
+GPU layers     gemma4:12b (dense)        qwen3-coder:30b (MoE, ~3B active)
+all / auto     54.6 tok/s  100% VRAM     56.1 tok/s  57% VRAM
+36             18.1        0.33x         (all 48 layers = 18.4 GB: CUDA OOM)
+24             11.3        0.21x         38.7        0.69x
+12              8.3        0.15x         28.7        0.51x
+0 (pure CPU)    5.8        0.11x         21.0        0.37x
+```
+
+**On CPU alone the 30B MoE runs 3.6× faster than the 12B dense model** — 21.0 against 5.8. The dense model reads every one of its parameters for every token, so whatever sits in RAM crosses the DDR4 bus on every token; keeping even 68% of it on the GPU still costs two thirds of the speed. The MoE reads ~3B of 30B parameters per token, so most of what sits in RAM is untouched for any given token.
+
+So the practical ceiling on a 12 GB card with 64 GB behind it is two different numbers:
+
+- **Dense: it must fit in VRAM, entirely.** At 64k with a q8_0 KV cache the budget is roughly 8–8.5 GB of weights, which is a 12–14B model at Q4. One layer over and the cliff above starts.
+- **MoE: bounded by RAM, not VRAM.** The largest measured here is nemotron at 25.8 GB loaded and only 35% resident, still doing 46.5 tok/s. What matters is active parameters per token, not total size.
+
+> **Corrected 2026-09-19 in [07](07-maintenance-pass.md).** Everything in the original table above is a fact about a **4k** operating point, the default in force when it was measured. [03c](03c-moe-placement-measured.md) later set the endpoint to 64k, where the KV cache takes ~6.8 GB of the 12 GB card, only 43% of the MoE stays in VRAM, and it generates at **38.2 tok/s — 31% slower** than `gemma4:12b`, not equal to it. The dense models are flat across context because their weights never leave VRAM. The rule above needs "at short context" attached to it, and nobody re-measured when the configuration changed.
 
 After a reboot, nobody logged in:
 
