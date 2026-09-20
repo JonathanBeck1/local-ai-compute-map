@@ -135,7 +135,39 @@ qwen3.5:27b (dense)       17.0 GB      51%         4.8          5.7
 So the practical ceiling on a 12 GB card with 64 GB behind it is two different numbers:
 
 - **Dense: it must fit in VRAM, entirely.** At 64k with a q8_0 KV cache the budget is roughly 8–8.5 GB of weights, which is a 12–14B model at Q4. gemma4:12b sits on that line at 55.7 tok/s; the 27B dense above is what one rung past it costs.
-- **MoE: bounded by RAM, not VRAM.** The largest measured here is nemotron at 25.8 GB loaded and only 35% resident, still doing 46.5 tok/s. What matters is active parameters per token, not total size.
+- **MoE: bounded by RAM, not VRAM.** Measured at 47 GB loaded and 23% resident, still doing 40 tok/s. What matters is active parameters per token, not total size.
+
+### "Can this box run a 70B?" — the answer is about architecture, not size
+
+The obvious question, and the answer is two different answers.
+
+**A dense 70B: no.** At Q4 that is ~40 GB of weights against ~10 GB of usable VRAM, so 30 GB crosses the DDR4 bus for every token. Calibrating the bandwidth model on seven measured points here — the only free parameter, effective DDR4 bandwidth, falls out of the pure-CPU measurement at 44 GB/s, 86% of DDR4-3200 spec:
+
+```
+measured point                      predicted   measured    error
+gemma4:12b dense, CPU only              5.8        5.8        0%
+gemma4:12b dense, 30% on GPU            8.0        8.3       -4%
+gemma4:12b dense, 49% on GPU           10.5       11.3       -7%
+qwen3.5:27b dense, 51% on GPU           4.9        4.8        1%
+qwen3-coder:30b MoE (~3B act)          45.8       45.1        2%
+qwen3.5:122b MoE (~10B act)             8.5        8.7       -1%
+
+70B DENSE, 4k context   -> 1.45 tok/s   (41 s for a 60-token reply)
+```
+
+**An 80B MoE: yes, comfortably.** `Qwen3-Next-80B-A3B` at Q4_K_S — 80B total, **3B active** — 45.5 GB on disk, which is not in Ollama's library and had to come from Hugging Face:
+
+```
+ctx      gen tok/s   prompt tok/s   resident   loaded    swap
+4k       41.6        759 (8.4k)      24%       46.1 GB   0
+64k      40.1         —              23%       47.0 GB   0
+```
+
+Three warm runs at 4k gave 41.7, 41.6, 41.6 — stable. **A model 4.7× the parameter count of the dense 27B runs 8.6× faster than it** (40 vs 4.8), because it reads ~1.7 GB per token instead of 17 GB.
+
+The bandwidth model predicted 32 tok/s and the real figure is 41.6, so it is **26% conservative** on this architecture — Qwen3-Next's hybrid attention does less work per token than a plain roofline assumes. Recorded as a limit of the model: it is a good floor, not a precise forecast.
+
+**So the ceiling is RAM, and the rule is active parameters.** 47 GB loaded works with 55 GB of page cache and zero swap. The 122B at 81 GB is what going past it looks like: every byte of RAM, every byte of swap, and 8.7 tok/s.
 
 > **Corrected 2026-09-19 in [07](07-maintenance-pass.md).** Everything in the original table above is a fact about a **4k** operating point, the default in force when it was measured. [03c](03c-moe-placement-measured.md) later set the endpoint to 64k, where the KV cache takes ~6.8 GB of the 12 GB card, only 43% of the MoE stays in VRAM, and it generates at **38.2 tok/s — 31% slower** than `gemma4:12b`, not equal to it. The dense models are flat across context because their weights never leave VRAM. The rule above needs "at short context" attached to it, and nobody re-measured when the configuration changed.
 
@@ -164,6 +196,16 @@ finish_reason: length    completion_tokens: 80
 ```
 
 `qwen3.5` reasons first, Ollama returns that in a separate `reasoning` field, and it counts against the budget. Empty answer, no error. `"think": false` on the native API, or a generous `max_tokens`, fixes it. `gemma4` doesn't do this. Anyone pointing a client at this endpoint hits it on the first short request.
+
+**1b. `ollama pull hf.co/...` does not work on this machine, and said so with exit code 0.** The documented one-liner for pulling a GGUF from Hugging Face dies at the CDN hand-off:
+
+```
+Error: Head "https://us.aws.cdn.hf.co/xet-bridge-us/...": blocked redirect to a different host
+```
+
+The host fetches that exact URL fine (`curl -L -r 0-1048575` returns HTTP 206), so it is not the network. Workaround: download the `.gguf` with `curl` into the bind-mounted model directory and import it with a two-line Modelfile (`FROM /root/.ollama/imported/<file>.gguf`, then `ollama create`). That works, and is how the 80B above was installed.
+
+The failure was nearly missed because the command was piped to `tail`, so `$?` was **0** — a pipeline's exit status is its last command's. That same mistake appeared four times in one session: a `sudo -n` check that printed "passwordless sudo: YES" directly under `sudo: a password is required`, a thermal script whose final loop test became its exit status, this, and an `lsmod | grep -q` under `pipefail` in an earlier phase. **Any check built on a pipeline is reporting on the wrong process.** Verify the artefact exists, not that the command "succeeded".
 
 **2. The first speed run was wrong and looked fine.** Prompt tok/s of 5 and 3 for the two big models — the cold load folded into the prompt timing. One VRAM figure from the wrong process, because `ollama stop a b c` only unloads `a`. Re-run: unload everything, one warm-up request, measure the second, one model at a time. Only the re-run is in the table. A number with a method attached is a measurement; the first table was a printout.
 
