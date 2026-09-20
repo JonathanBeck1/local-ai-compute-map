@@ -32,8 +32,8 @@ The desktop was a gaming PC running Windows until 2026-09-07. Converting it is p
 - [03b — Coding agent on the workstation](03b-coding-agent-on-the-workstation.md) — done; llmfit checked against measurements, Claude Code on a local 30B coder versus the paid model. Green tests, wrong output
 - [03c — Explicit MoE placement, measured against the automatic one](03c-moe-placement-measured.md) — llama.cpp hand-placed expert tensors vs Ollama's automatic split on the same GGUF blob. The 10% win was a VRAM budget, not an algorithm
 - [06b — A spend gate, built before there was anything to spend](06b-spend-gate.md) — a Claude Code hook that stops an agent launching paid cloud compute; at a $0 cap it blocked Claude itself, live. 0 false positives across 207 real commands
-- [08 — Planning the next node, and what "one model, many agents" actually costs](08-planning-the-next-node.md) — PAIR does not pool memory; published M5 Ultra benchmarks that exceed memory bandwidth; and a concurrency test where the runtime silently served eight "parallel" agents one at a time
 - [07 — A maintenance pass, and a headline that stopped being true](07-maintenance-pass.md) — Ollama upgraded and re-benchmarked; the phase 03 MoE result re-measured at the context this machine actually runs, where it inverts; an 8-bit KV cache that buys half of it back with recall tested rather than assumed; two acceptance checks that failed on a correct machine
+- [08 — Planning the next node, and what "one model, many agents" actually costs](08-planning-the-next-node.md) — PAIR does not pool memory; published M5 Ultra benchmarks that exceed memory bandwidth; and a concurrency test where the runtime silently served eight "parallel" agents one at a time
 
 Planned. Each becomes a file when it has output in it, not before. Order changed 2026-09-11 with the roles above:
 
