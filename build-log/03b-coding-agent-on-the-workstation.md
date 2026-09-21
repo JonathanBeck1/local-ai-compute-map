@@ -268,6 +268,55 @@ now in the `claude-local` header:
 > Ask for assumptions before code, marked VERIFIED or GUESSED. Then check every
 > GUESSED one yourself, and treat every VERIFIED one as GUESSED too, because the
 > model cannot tell the difference.
+
+### And then it does nothing in the agent loop
+
+The obvious next question: the rule works in chat, but does it make the model
+*act* — does it run the `curl` it has been given? Same exam, same harness, same
+45-minute limit, with the rule appended to the task text (not the system prompt,
+for the reason below) and this line added:
+
+> *"You have curl. Anything still GUESSED when you finish is a choice you made."*
+
+```
+wall 175 s | turns 4 | tool calls 3 | curl calls 0 | rejected 1
+```
+
+**Zero curls.** Seven contestants now, **279 tool actions, not one.**
+
+There was no ASSUMPTIONS block either — not in a file, not in a message. The rule
+that reliably produces one in chat produced nothing here. What it did instead was
+identical to the unprompted run: write `ollama_info.py`, write
+`test_ollama_info.py`, run `python3 -m pytest`, get denied, stop and ask for
+approval.
+
+In agent mode it ignored **four** explicit instructions from the same task text:
+both required filenames, the specified runner (`uvx pytest -q`, the only
+permitted form), and "using only the standard library" — it imported `requests`.
+And it reverted to the invention from the original exam:
+
+```python
+return data.get("processes", [])      # /api/ps top-level keys: ['models']
+"quantization": model["details"].get("quantization", "unknown")   # real: quantization_level
+```
+
+Run against the live endpoint, the tool is once again blind to the model that
+wrote it — resident with 10.8 GB in VRAM, reported as `LOADED no`.
+
+**Two ways the fix fails to reach the agent, both measured rather than assumed.**
+First, as a Modelfile `SYSTEM` it is silently overridden: the same question asked
+with and without a client system message produces the ASSUMPTIONS block only
+without, and with one the answer regressed to an invented top-level
+`quantization` field plus a non-stdlib import. Claude Code always sends a system
+prompt, so the `-checked` variant is inert under `claude-local`. Second, moved
+into the task text where nothing can override it, it is simply ignored — along
+with three other instructions sitting beside it.
+
+**The conclusion is narrow and worth stating plainly: prompt-level fixes do not
+survive into the agent loop.** The chat result is real and reproducible, and it
+is a *review* aid — it makes a human reading the output better informed. It is
+not an agent fix. An agent that ignores four explicit instructions in its own
+task will ignore a fifth about checking its assumptions.
  The 80B is now the best available *drafting* model on this machine — its code is closest to correct and it is folder-disciplined — but "best" still means every line needs reading.
 
 ## What I would do differently
