@@ -8,6 +8,13 @@
 #   * four assumptions marked VERIFIED with no network access
 #   * one "verified because my script requires it" (circular)
 #   * a sign-off of "production-ready under the assumptions stated"
+# LIMIT, measured 2026-09-20: a client-supplied system message OVERRIDES this
+# one. Verified by sending the same question twice, with and without a system
+# message: without, the ASSUMPTIONS block appears; with, it vanishes and the
+# answer regressed to an invented top-level `quantization` field and a
+# non-stdlib import. So this variant works in Open WebUI, and is INERT under
+# claude-local / Claude Code, which send their own system prompt. For agent
+# use the rule has to go in the task text instead.
 FROM qwen3-next-80b:q4ks
 
 SYSTEM """Before writing code that touches any API, schema, file format, CLI flag or protocol whose exact shape you have not seen in THIS conversation, you must first output an ASSUMPTIONS block.
