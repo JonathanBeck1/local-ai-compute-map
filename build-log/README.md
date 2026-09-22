@@ -13,8 +13,16 @@ Guides are usually written afterwards, by someone who already knows the answer, 
 | Main station **and** local model endpoint | Self-built desktop, Ubuntu 24.04 | RTX 4070, 12 GB VRAM, 64 GB RAM, three monitors, 1 TB bulk disk for models and images |
 | Mobile client | MacBook Pro M3 Pro | 18 GB unified, one screen |
 | Always-on small services | Mac mini M4 | 16 GB unified |
-| Archive | NAS | — |
+| Archive **and app host** | NAS, TrueNAS SCALE 24.10.2 | Ryzen 5 8600G, 32 GB non-ECC, 2.5 GbE, 8 TB mirror with 7 TB free, no discrete GPU |
 | Burst | Rented cloud GPUs | bounded |
+
+**Corrected 2026-09-21.** The NAS row read "Archive — —" and said nothing about
+what the machine is. It was also carrying an assumption that turned out to be
+false elsewhere in this log: that it held an RTX 2060 Super and was therefore a
+second CUDA node. The card was removed for heat, and the measured spec is above.
+It is a storage and apps box — it also runs the file-cloud app from
+[nas-project-cloud](https://github.com/JonathanBeck1/nas-project-cloud) — with
+integrated graphics and no CUDA.
 
 **Corrected 2026-09-11.** Earlier revisions had the laptop as the development console and the desktop as a server it talked to. That was backwards. The desktop has the screens, the memory, the GPU and the tooling; the laptop has one screen. So the desktop is where the work happens and the laptop is what reaches back into it when I'm away. Two consequences the log has to live with: the work now sits on a disk with no backup yet, and the GPU is shared between the desk and the endpoint — a game running at the desk takes VRAM from the model. It is one person's workstation that also serves models, not a dedicated server, and it gets described as such.
 
