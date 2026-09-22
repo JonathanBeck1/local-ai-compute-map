@@ -36,9 +36,24 @@ RTX PRO (Turing+), DGX Spark, and **Apple M4 or newer**. Against this lab:
 | Machine | Eligible |
 |---|---|
 | Workstation, RTX 4070 | yes |
-| NAS, RTX 2060 Super | yes — 20-series makes the cut |
+| NAS, integrated Radeon 760M | **no** — see the correction below |
 | Mac mini M4 | yes |
 | MacBook Pro **M3** Pro | **no** — below the M4 floor |
+
+**Corrected 2026-09-21.** This table said "NAS, RTX 2060 Super — yes, 20-series
+makes the cut." The card is no longer in that machine. It ran too hot: the case
+was built around two 8 TB drives, not around a 175 W card, and the heat that
+matters there lands on the mirror rather than on the GPU. Inventoried over the
+TrueNAS API afterwards, the box reports exactly one GPU — the Ryzen 8600G's
+integrated Radeon 760M at `0000:0c:00.0`, with nothing on any other PCI bus.
+
+So the lab has **two** PAIR-eligible machines, not three. That matters to this
+phase specifically, because the argument here is what the lab already owns
+before spending four figures, and the baseline it argues from was one node
+larger than it really is. The conclusion doesn't move — PAIR buys parallelism
+across independent requests, and an 8 GB node would not have raised the ceiling
+on model size either way — but the count was wrong and it was wrong in the
+direction that flatters the do-nothing option.
 
 ## The candidate machines, with the marketing removed
 
